@@ -111,10 +111,6 @@ Our model and weights are licensed for both researchers and commercial entities,
 
 See the [LICENSE](..) file, as well as our accompanying [Acceptable Use Policy](USE_POLICY.md)
 
-## References
-
-1. [Research Paper](https://ai.meta.com/research/publications/llama-2-open-foundation-and-fine-tuned-chat-models/)
-2. [Llama 2 technical overview](https://ai.meta.com/resources/models-and-libraries/llama)
-3. [Open Innovation AI Research Community](https://ai.meta.com/llama/open-innovation-ai-research-community/)
+## Questions
 
 For common questions, the FAQ can be found [here](https://llama.meta.com/faq) which will be kept up to date over time as new questions arise. 
