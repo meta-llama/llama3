@@ -3,39 +3,102 @@
 
 import os
 from logging import getLogger
-from typing import List
+from pathlib import Path
+from typing import AbstractSet, Collection, Dict, Iterator, List, Literal, Union
 
-from sentencepiece import SentencePieceProcessor
+import tiktoken
+from tiktoken.load import load_tiktoken_bpe
 
 
 logger = getLogger()
 
 
 class Tokenizer:
-    """tokenizing and encoding/decoding text using SentencePiece."""
+    """
+    tokenizing and encoding/decoding text using the Tiktoken tokenizer.
+    """
+
+    special_tokens: Dict[str, List[int]]
+
+    num_reserved_special_tokens = 256
+
+    pat_str = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+
     def __init__(self, model_path: str):
         """
-        Initializes the Tokenizer with a SentencePiece model.
+        Initializes the Tokenizer with a Tiktoken model.
 
         Args:
-            model_path (str): The path to the SentencePiece model file.
+            model_path (str): The path to the Tiktoken model file.
         """
         # reload tokenizer
         assert os.path.isfile(model_path), model_path
-        self.sp_model = SentencePieceProcessor(model_file=model_path)
+
+        mergeable_ranks = load_tiktoken_bpe(model_path)
+        num_base_tokens = len(mergeable_ranks)
+        special_tokens = (
+            [
+                "<|begin_of_text|>",
+                "<|end_of_text|>",
+                "<|fim_prefix|>",
+                "<|fim_middle|>",
+                "<|fim_suffix|>",
+                "<|start_header_id|>",
+                "<|end_header_id|>",
+                "<|step_id|>",  # In step_id refers to the real step_id for multi-step response such as reasoning
+                "<|eom_id|>",  # end of message
+                "<|eot_id|>",  # end of turn
+            ]
+            + [
+                f"<|reserved_special_token_{i}|>"
+                for i in range(self.num_reserved_special_tokens - 11)
+            ]
+            + [
+                "<|python_tag|>",  # ipython message
+            ]
+        )
+        assert (num_base_tokens + len(special_tokens)) % 8 == 0
+
+        self.model = tiktoken.Encoding(
+            name=Path(model_path).name,
+            pat_str=self.pat_str,
+            mergeable_ranks=mergeable_ranks,
+            special_tokens={
+                token: num_base_tokens + i for i, token in enumerate(special_tokens)
+            },
+        )
         logger.info(f"Reloaded SentencePiece model from {model_path}")
 
+        self.special_tokens = {
+            token: self.model.encode(token, allowed_special={token})
+            for token in special_tokens
+        }
+
+        unrecognized_special_tokens = {
+            token
+            for token, token_ids in self.special_tokens.items()
+            if len(token_ids) != 1
+        }
+        assert len(unrecognized_special_tokens) == 0, f"{unrecognized_special_tokens=}"
+
         # BOS / EOS token IDs
-        self.n_words: int = self.sp_model.vocab_size()
-        self.bos_id: int = self.sp_model.bos_id()
-        self.eos_id: int = self.sp_model.eos_id()
-        self.pad_id: int = self.sp_model.pad_id()
+        self.n_words: int = self.model.n_vocab
+        self.bos_id: int = self.special_tokens["<|begin_of_text|>"][0]
+        self.eos_id: int = self.special_tokens["<|end_of_text|>"][0]
+        self.pad_id: int = -1
         logger.info(
             f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}"
         )
-        assert self.sp_model.vocab_size() == self.sp_model.get_piece_size()
 
-    def encode(self, s: str, bos: bool, eos: bool) -> List[int]:
+    def encode(
+        self,
+        s: str,
+        *,
+        bos: bool,
+        eos: bool,
+        allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),
+        disallowed_special: Union[Literal["all"], Collection[str]] = (),
+    ) -> List[int]:
         """
         Encodes a string into a list of token IDs.
 
@@ -43,16 +106,52 @@ class Tokenizer:
             s (str): The input string to be encoded.
             bos (bool): Whether to prepend the beginning-of-sequence token.
             eos (bool): Whether to append the end-of-sequence token.
+            allowed_tokens ("all"|set[str]): allowed special tokens in string
+            disallowed_tokens ("all"|set[str]): TODO
 
         Returns:
-            List[int]: A list of token IDs.
+            list[int]: A list of token IDs.
+
+        By default, setting disallowed_special=() encodes a string by ignoring
+        special tokens. Specifically:
+        - Setting `disallowed_special` to () will cause all text corresponding
+          to special tokens to be encoded as natural text (insteading of raising
+          an error).
+        - Setting `allowed_special` to "all" will treat all text corresponding
+          to special tokens to be encoded as special tokens.
         """
         assert type(s) is str
-        t = self.sp_model.encode(s)
+
+        # The tiktoken tokenizer can handle <=400k chars without
+        # pyo3_runtime.PanicException (may go beyond 400k)
+        TIKTOKEN_MAX_ENCODE_CHARS = 400_000
+
+        # Tiktoken is very bad at handling long sequences where either no whitespaces or only whitespaces:
+        # https://github.com/openai/tiktoken/issues/195
+        # Here we iterate over subsequences and split if we exceed the limit
+        # of max consequtive non-whitespace or whitespace characters.
+        MAX_NO_WHITESPACES_CHARS = 25_000
+
+        substrs = (
+            substr
+            for i in range(0, len(s), TIKTOKEN_MAX_ENCODE_CHARS)
+            for substr in self._split_whitespaces_or_nonwhitespaces(
+                s[i : i + TIKTOKEN_MAX_ENCODE_CHARS], MAX_NO_WHITESPACES_CHARS
+            )
+        )
+        t: List[int] = []
+        for substr in substrs:
+            t.extend(
+                self.model.encode(
+                    substr,
+                    allowed_special=allowed_special,
+                    disallowed_special=disallowed_special,
+                )
+            )
         if bos:
-            t = [self.bos_id] + t
+            t.insert(0, self.bos_id)
         if eos:
-            t = t + [self.eos_id]
+            t.append(self.eos_id)
         return t
 
     def decode(self, t: List[int]) -> str:
@@ -65,4 +164,32 @@ class Tokenizer:
         Returns:
             str: The decoded string.
         """
-        return self.sp_model.decode(t)
+        return self.model.decode(t)
+
+    @staticmethod
+    def _split_whitespaces_or_nonwhitespaces(
+        s: str, max_consecutive_slice_len: int
+    ) -> Iterator[str]:
+        """
+        NOTE: This function is copied from src/data/tokenizer.py
+
+        Split the string `s` so that each substring contains no more than `max_consecutive_slice_len`
+        consecutive whitespaces or consecutive non-whitespaces
+        """
+        current_slice_len = 0
+        current_slice_is_space = s[0].isspace() if len(s) > 0 else False
+        slice_start = 0
+
+        for i in range(len(s)):
+            is_now_space = s[i].isspace()
+
+            if current_slice_is_space ^ is_now_space:
+                current_slice_len = 1
+                current_slice_is_space = is_now_space
+            else:
+                current_slice_len += 1
+                if current_slice_len > max_consecutive_slice_len:
+                    yield s[slice_start:i]
+                    slice_start = i
+                    current_slice_len = 1
+        yield s[slice_start:]

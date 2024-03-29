@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import List, Literal, Optional, Tuple, TypedDict
+from typing import List, Literal, Optional, Sequence, Tuple, TypedDict
 
 import torch
 import torch.nn.functional as F
@@ -25,6 +25,8 @@ Role = Literal["system", "user", "assistant"]
 class Message(TypedDict):
     role: Role
     content: str
+    ipython: bool
+    eot: bool
 
 
 class CompletionPrediction(TypedDict, total=False):
@@ -39,13 +41,53 @@ class ChatPrediction(TypedDict, total=False):
     logprobs: List[float]  # not required
 
 
-Dialog = List[Message]
+Dialog = Sequence[Message]
 
 B_INST, E_INST = "[INST]", "[/INST]"
 B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
 
 SPECIAL_TAGS = [B_INST, E_INST, "<<SYS>>", "<</SYS>>"]
 UNSAFE_ERROR = "Error: special tags are not allowed as part of the prompt."
+
+
+def encode_header(tokenizer: Tokenizer, message: Message) -> List[int]:
+    tokens = []
+    tokens += tokenizer.special_tokens["<|start_header_id|>"]
+    tokens += tokenizer.encode(message["role"], bos=False, eos=False)
+    tokens += tokenizer.special_tokens["<|end_header_id|>"]
+    tokens += tokenizer.encode("\n\n", bos=False, eos=False)
+    return tokens
+
+
+def encode_message(tokenizer: Tokenizer, message: Message) -> List[int]:
+    tokens = encode_header(tokenizer, message)
+    if message.get("ipython", False):
+        tokens += tokenizer.special_tokens["<|python_tag|>"]
+    if message.get("content", ""):
+        tokens += tokenizer.encode(message["content"].strip(), bos=False, eos=False)
+    if message.get("eot", False):
+        tokens += tokenizer.special_tokens["<|eot_id|>"]
+    else:
+        tokens += tokenizer.special_tokens["<|eom_id|>"]
+    return tokens
+
+
+def encode_dialog(
+    tokenizer: Tokenizer, dialog: Dialog, *, bos: bool, eos: bool
+) -> List[int]:
+    tokens = []
+    if bos:
+        tokens += tokenizer.special_tokens["<|begin_of_text|>"]
+    for message in dialog:
+        tokens += encode_message(tokenizer, message)
+
+    if dialog[-1]["role"] == "assistant":
+        # Remove step_id if the last turn is from Assistant to allow completion
+        tokens.pop()
+    elif eos:
+        # Add EOS token at the end of this dialog if required
+        tokens += tokenizer.special_tokens["<|end_of_text|>"]
+    return tokens
 
 
 class Llama:
@@ -274,12 +316,15 @@ class Llama:
             return [
                 {
                     "generation": self.tokenizer.decode(t),
-                    "tokens": [self.tokenizer.decode(x) for x in t],
+                    "tokens": [self.tokenizer.decode([x]) for x in t],
                     "logprobs": logprobs_i,
                 }
                 for t, logprobs_i in zip(generation_tokens, generation_logprobs)
             ]
-        return [{"generation": self.tokenizer.decode(t)} for t in generation_tokens]
+        return [
+            {"generation": self.tokenizer.decode(t)}
+            for t in generation_tokens
+        ]
 
     def chat_completion(
         self,
@@ -315,52 +360,10 @@ class Llama:
         """
         if max_gen_len is None:
             max_gen_len = self.model.params.max_seq_len - 1
-        prompt_tokens = []
-        unsafe_requests = []
-        for dialog in dialogs:
-            unsafe_requests.append(
-                any([tag in msg["content"] for tag in SPECIAL_TAGS for msg in dialog])
-            )
-            if dialog[0]["role"] == "system":
-                dialog = [
-                    {
-                        "role": dialog[1]["role"],
-                        "content": B_SYS
-                        + dialog[0]["content"]
-                        + E_SYS
-                        + dialog[1]["content"],
-                    }
-                ] + dialog[2:]
-            assert all([msg["role"] == "user" for msg in dialog[::2]]) and all(
-                [msg["role"] == "assistant" for msg in dialog[1::2]]
-            ), (
-                "model only supports 'system', 'user' and 'assistant' roles, "
-                "starting with 'system', then 'user' and alternating (u/a/u/a/u...)"
-            )
-            dialog_tokens: List[int] = sum(
-                [
-                    self.tokenizer.encode(
-                        f"{B_INST} {(prompt['content']).strip()} {E_INST} {(answer['content']).strip()} ",
-                        bos=True,
-                        eos=True,
-                    )
-                    for prompt, answer in zip(
-                        dialog[::2],
-                        dialog[1::2],
-                    )
-                ],
-                [],
-            )
-            assert (
-                dialog[-1]["role"] == "user"
-            ), f"Last message must be from user, got {dialog[-1]['role']}"
-            dialog_tokens += self.tokenizer.encode(
-                f"{B_INST} {(dialog[-1]['content']).strip()} {E_INST}",
-                bos=True,
-                eos=False,
-            )
-            prompt_tokens.append(dialog_tokens)
-
+        prompt_tokens = [
+            encode_dialog(self.tokenizer, dialog, bos=True, eos=False)
+            for dialog in dialogs
+        ]
         generation_tokens, generation_logprobs = self.generate(
             prompt_tokens=prompt_tokens,
             max_gen_len=max_gen_len,
@@ -373,25 +376,21 @@ class Llama:
                 {
                     "generation": {
                         "role": "assistant",
-                        "content": self.tokenizer.decode(t)
-                        if not unsafe
-                        else UNSAFE_ERROR,
+                        "content": self.tokenizer.decode(t),
                     },
-                    "tokens": [self.tokenizer.decode(x) for x in t],
+                    "tokens": [self.tokenizer.decode([x]) for x in t],
                     "logprobs": logprobs_i,
                 }
-                for t, logprobs_i, unsafe in zip(
-                    generation_tokens, generation_logprobs, unsafe_requests
-                )
+                for t, logprobs_i in zip(generation_tokens, generation_logprobs)
             ]
         return [
             {
                 "generation": {
                     "role": "assistant",
-                    "content": self.tokenizer.decode(t) if not unsafe else UNSAFE_ERROR,
+                    "content": self.tokenizer.decode(t),
                 }
             }
-            for t, unsafe in zip(generation_tokens, unsafe_requests)
+            for t in generation_tokens
         ]
 
 
