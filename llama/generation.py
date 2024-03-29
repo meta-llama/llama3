@@ -50,44 +50,99 @@ SPECIAL_TAGS = [B_INST, E_INST, "<<SYS>>", "<</SYS>>"]
 UNSAFE_ERROR = "Error: special tags are not allowed as part of the prompt."
 
 
-def encode_header(tokenizer: Tokenizer, message: Message) -> List[int]:
-    tokens = []
-    tokens += tokenizer.special_tokens["<|start_header_id|>"]
-    tokens += tokenizer.encode(message["role"], bos=False, eos=False)
-    tokens += tokenizer.special_tokens["<|end_header_id|>"]
-    tokens += tokenizer.encode("\n\n", bos=False, eos=False)
-    return tokens
+class ParseError(ValueError):
+    pass
 
 
-def encode_message(tokenizer: Tokenizer, message: Message) -> List[int]:
-    tokens = encode_header(tokenizer, message)
-    if message.get("ipython", False):
-        tokens += tokenizer.special_tokens["<|python_tag|>"]
-    if message.get("content", ""):
-        tokens += tokenizer.encode(message["content"].strip(), bos=False, eos=False)
-    if message.get("eot", False):
-        tokens += tokenizer.special_tokens["<|eot_id|>"]
-    else:
-        tokens += tokenizer.special_tokens["<|eom_id|>"]
-    return tokens
+class MessageFormat:
+    def __init__(self, tokenizer: Tokenizer):
+        self.tokenizer = tokenizer
 
+    def encode_header(self, message: Message) -> List[int]:
+        tokens = []
+        tokens.append(self.tokenizer.special_tokens["<|start_header_id|>"])
+        tokens.extend(self.tokenizer.encode(message["role"], bos=False, eos=False))
+        tokens.append(self.tokenizer.special_tokens["<|end_header_id|>"])
+        tokens.extend(self.tokenizer.encode("\n\n", bos=False, eos=False))
+        return tokens
 
-def encode_dialog(
-    tokenizer: Tokenizer, dialog: Dialog, *, bos: bool, eos: bool
-) -> List[int]:
-    tokens = []
-    if bos:
-        tokens += tokenizer.special_tokens["<|begin_of_text|>"]
-    for message in dialog:
-        tokens += encode_message(tokenizer, message)
+    def encode_message(self, message: Message) -> List[int]:
+        tokens = self.encode_header(message)
+        if message.get("ipython", False):
+            tokens.append(self.tokenizer.special_tokens["<|python_tag|>"])
+        if message.get("content", ""):
+            tokens.extend(self.tokenizer.encode(message["content"].strip(), bos=False, eos=False))
+        if message.get("eot", False):
+            tokens.append(self.tokenizer.special_tokens["<|eot_id|>"])
+        else:
+            tokens.append(self.tokenizer.special_tokens["<|eom_id|>"])
+        return tokens
 
-    if dialog[-1]["role"] == "assistant":
-        # Remove step_id if the last turn is from Assistant to allow completion
-        tokens.pop()
-    elif eos:
-        # Add EOS token at the end of this dialog if required
-        tokens += tokenizer.special_tokens["<|end_of_text|>"]
-    return tokens
+    def decode_header(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
+        tokens, _ = self._take(tokens, "<|start_header_id|>")
+        tokens, tokens_role, _ = self._take_until(tokens, "<|end_header_id|>")
+        tokens, _ = self._take(tokens, "\n\n")
+        return tokens, {"role": self.tokenizer.decode(tokens_role)}
+
+    def decode_message(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
+        tokens, message = self.decode_header(tokens)
+        if len(tokens) > 0 and tokens[0] == self.tokenizer.special_tokens["<|python_tag|>"]:
+            message["ipython"] = True
+            tokens = tokens[1:]
+        tokens, tokens_content, tokens_end = self._take_until(tokens, "<|eot_id|>", "<|eom_id|>")
+        message["content"] = self.tokenizer.decode(tokens_content)
+        message["eot"] = (tokens_end == [self.tokenizer.special_tokens["<|eot_id|>"]])
+        return tokens, message
+
+    def encode_dialog(self, dialog: Dialog, *, bos: bool, eos: bool) -> List[int]:
+        tokens = []
+        if bos:
+            tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
+        for message in dialog:
+            tokens.extend(self.encode_message(message))
+
+        if dialog[-1]["role"] == "assistant":
+            # Remove step_id if the last turn is from Assistant to allow completion
+            tokens.pop()
+        elif eos:
+            # Add EOS token at the end of this dialog if required
+            tokens.append(self.tokenizer.special_tokens["<|end_of_text|>"])
+        return tokens
+
+    def _take(self, tokens: Sequence[int], *expected_strs:str) -> Tuple[Sequence[int], Sequence[int]]:
+        for expected_str in expected_strs:
+            t = self.tokenizer.encode(expected_str, bos=False, eos=False, allowed_special="all")
+            if len(tokens) < len(t):
+                continue
+            if tokens[:len(t)] != t:
+                continue
+            return tokens[len(t):], tokens[:len(t)]
+        raise ParseError(f"Expected any of {expected_strs!r}")
+
+    def _take_until(self, tokens: Sequence[int], *expected_strs:str) -> Tuple[Sequence[int], Sequence[int], Sequence[int]]:
+        best = None
+        for expected_str in expected_strs:
+            t = self.tokenizer.encode(expected_str, bos=False, eos=False, allowed_special="all")
+            if len(tokens) < len(t):
+                continue
+
+            offset = 0
+            try:
+                while offset < len(tokens):
+                    offset = tokens.index(t[0], offset)
+                    if tokens[offset:offset + len(t)] == t:
+                        if best is None or offset < best[0]:
+                            best = (offset, t)
+                        break
+            except ValueError:
+                continue
+        if best is not None:
+            return (
+                tokens[best[0] + len(best[1]):],  # next tokens
+                tokens[:best[0]],  # tokens up to found sequence,
+                tokens[best[0]: best[0] + len(best[1])],  # found sequence itself
+            )
+        raise ParseError(f"Expected tokens followed by any of {expected_strs!r}")
 
 
 class Llama:
@@ -167,6 +222,7 @@ class Llama:
     def __init__(self, model: Transformer, tokenizer: Tokenizer):
         self.model = model
         self.tokenizer = tokenizer
+        self.formatter = MessageFormat(tokenizer)
 
     @torch.inference_mode()
     def generate(
@@ -247,7 +303,7 @@ class Llama:
                     ignore_index=pad_id,
                 )
             eos_reached |= (~input_text_mask[:, cur_pos]) & (
-                next_token == self.tokenizer.eos_id
+                next_token in self.tokenizer.stop_tokens
             )
             prev_pos = cur_pos
             if all(eos_reached):
@@ -360,8 +416,9 @@ class Llama:
         """
         if max_gen_len is None:
             max_gen_len = self.model.params.max_seq_len - 1
+
         prompt_tokens = [
-            encode_dialog(self.tokenizer, dialog, bos=True, eos=False)
+            self.formatter.encode_dialog(dialog, bos=True, eos=False)
             for dialog in dialogs
         ]
         generation_tokens, generation_logprobs = self.generate(

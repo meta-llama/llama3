@@ -13,12 +13,16 @@ from tiktoken.load import load_tiktoken_bpe
 logger = getLogger()
 
 
+def assert_single_token(tokens:List[int]) -> int:
+    assert len(tokens)
+
+
 class Tokenizer:
     """
     tokenizing and encoding/decoding text using the Tiktoken tokenizer.
     """
 
-    special_tokens: Dict[str, List[int]]
+    special_tokens: Dict[str, int]
 
     num_reserved_special_tokens = 256
 
@@ -58,34 +62,26 @@ class Tokenizer:
             ]
         )
         assert (num_base_tokens + len(special_tokens)) % 8 == 0
-
+        self.special_tokens = {
+            token: num_base_tokens + i for i, token in enumerate(special_tokens)
+        }
         self.model = tiktoken.Encoding(
             name=Path(model_path).name,
             pat_str=self.pat_str,
             mergeable_ranks=mergeable_ranks,
-            special_tokens={
-                token: num_base_tokens + i for i, token in enumerate(special_tokens)
-            },
+            special_tokens=self.special_tokens,
         )
         logger.info(f"Reloaded SentencePiece model from {model_path}")
 
-        self.special_tokens = {
-            token: self.model.encode(token, allowed_special={token})
-            for token in special_tokens
-        }
-
-        unrecognized_special_tokens = {
-            token
-            for token, token_ids in self.special_tokens.items()
-            if len(token_ids) != 1
-        }
-        assert len(unrecognized_special_tokens) == 0, f"{unrecognized_special_tokens=}"
-
         # BOS / EOS token IDs
         self.n_words: int = self.model.n_vocab
-        self.bos_id: int = self.special_tokens["<|begin_of_text|>"][0]
-        self.eos_id: int = self.special_tokens["<|end_of_text|>"][0]
+        self.bos_id: int = self.special_tokens["<|begin_of_text|>"]
+        self.eos_id: int = self.special_tokens["<|end_of_text|>"]
         self.pad_id: int = -1
+        self.stop_tokens = {
+            self.special_tokens["<|end_of_text|>"],
+            self.special_tokens["<|eot_id|>"],
+        }
         logger.info(
             f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}"
         )
