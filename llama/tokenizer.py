@@ -19,7 +19,6 @@ Role = Literal["system", "user", "assistant"]
 class Message(TypedDict, total=False):
     role: Role
     content: str
-    ipython: bool
     eot: bool
 
 
@@ -53,10 +52,10 @@ class Tokenizer:
             [
                 "<|begin_of_text|>",
                 "<|end_of_text|>",
-                "<|fim_prefix|>",
-                "<|fim_middle|>",
-                "<|fim_suffix|>",
-                "<|step_id|>",  # In step_id refers to the real step_id for multi-step response such as reasoning
+                "<|reserved_special_token_0|>",
+                "<|reserved_special_token_1|>",
+                "<|reserved_special_token_2|>",
+                "<|reserved_special_token_3|>",
                 "<|start_header_id|>",
                 "<|end_header_id|>",
                 "<|eom_id|>",  # end of message
@@ -64,10 +63,7 @@ class Tokenizer:
             ]
             + [
                 f"<|reserved_special_token_{i}|>"
-                for i in range(self.num_reserved_special_tokens - 11)
-            ]
-            + [
-                "<|python_tag|>",  # ipython message
+                for i in range(4, self.num_reserved_special_tokens - 6)
             ]
         )
         assert (num_base_tokens + len(special_tokens)) % 8 == 0
@@ -217,8 +213,6 @@ class MessageFormat:
 
     def encode_message(self, message: Message) -> List[int]:
         tokens = self.encode_header(message)
-        if message.get("ipython", False):
-            tokens.append(self.tokenizer.special_tokens["<|python_tag|>"])
         if message.get("content", ""):
             tokens.extend(self.tokenizer.encode(message["content"].strip(), bos=False, eos=False))
         if message.get("eot", False):
@@ -251,9 +245,6 @@ class MessageFormat:
 
     def decode_message(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
         tokens, message = self.decode_header(tokens)
-        if len(tokens) > 0 and tokens[0] == self.tokenizer.special_tokens["<|python_tag|>"]:
-            message["ipython"] = True
-            tokens = tokens[1:]
         tokens, tokens_content, tokens_end = self._take_until(tokens, "<|eot_id|>", "<|eom_id|>")
         message["content"] = self.tokenizer.decode(tokens_content)
         message["eot"] = (tokens_end == [self.tokenizer.special_tokens["<|eot_id|>"]])

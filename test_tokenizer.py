@@ -41,9 +41,9 @@ class TokenizerTests(TestCase):
         self.assertEqual(
             self.formatter.encode_message(message),
             [
-                128005,  # <|start_header_id|>
+                128006,  # <|start_header_id|>
                 882,  # "user"
-                128006,  # <|end_of_header|>
+                128007,  # <|end_of_header|>
                 271,  # "\n\n"
                 2028, 374, 264, 1296, 11914, 13,  # This is a test sentence.
                 128009,  # <|eot_id|>
@@ -54,9 +54,9 @@ class TokenizerTests(TestCase):
         self.assertEqual(
             self.formatter.decode_message(
                 [
-                    128005,  # <|start_header_id|>
+                    128006,  # <|start_header_id|>
                     882,  # "user"
-                    128006,  # <|end_of_header|>
+                    128007,  # <|end_of_header|>
                     271,  # "\n\n"
                     2028, 374, 264, 1296, 11914, 13,  # This is a test sentence.
                     128009,  # <|eot_id|>
@@ -85,9 +85,9 @@ class TokenizerTests(TestCase):
             self.formatter.encode_dialog(dialog, bos=True, eos=True),
             [
                 128000,  # <|begin_of_text|>
-                128005,  # <|start_header_id|>
+                128006,  # <|start_header_id|>
                 882,  # "user"
-                128006,  # <|end_of_header|>
+                128007,  # <|end_of_header|>
                 271,  # "\n\n"
                 2028, 374, 264, 1296, 11914, 13,  # This is a test sentence.
                 128009,  # <|eot_id|>
