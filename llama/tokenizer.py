@@ -128,7 +128,7 @@ class Tokenizer:
 
         # https://github.com/openai/tiktoken/issues/195
         # Here we iterate over subsequences and split if we exceed the limit
-        # of max consequtive non-whitespace or whitespace characters.
+        # of max consecutive non-whitespace or whitespace characters.
         MAX_NO_WHITESPACES_CHARS = 25_000
 
         substrs = (
