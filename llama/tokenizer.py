@@ -126,7 +126,6 @@ class Tokenizer:
         # pyo3_runtime.PanicException (may go beyond 400k)
         TIKTOKEN_MAX_ENCODE_CHARS = 400_000
 
-        # Tiktoken is very bad at handling long sequences where either no whitespaces or only whitespaces:
         # https://github.com/openai/tiktoken/issues/195
         # Here we iterate over subsequences and split if we exceed the limit
         # of max consequtive non-whitespace or whitespace characters.
