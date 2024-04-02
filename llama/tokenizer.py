@@ -4,17 +4,26 @@
 import os
 from logging import getLogger
 from pathlib import Path
-from typing import AbstractSet, Collection, Dict, Iterator, List, Literal, Union
+from typing import cast, AbstractSet, Any, Collection, Dict, Iterator, List, Literal, Sequence, Tuple, TypedDict, Union
 
 import tiktoken
 from tiktoken.load import load_tiktoken_bpe
 
 
-logger = getLogger()
+logger = getLogger(__name__)
 
 
-def assert_single_token(tokens:List[int]) -> int:
-    assert len(tokens)
+Role = Literal["system", "user", "assistant"]
+
+
+class Message(TypedDict, total=False):
+    role: Role
+    content: str
+    ipython: bool
+    eot: bool
+
+
+Dialog = Sequence[Message]
 
 
 class Tokenizer:
@@ -47,9 +56,9 @@ class Tokenizer:
                 "<|fim_prefix|>",
                 "<|fim_middle|>",
                 "<|fim_suffix|>",
+                "<|step_id|>",  # In step_id refers to the real step_id for multi-step response such as reasoning
                 "<|start_header_id|>",
                 "<|end_header_id|>",
-                "<|step_id|>",  # In step_id refers to the real step_id for multi-step response such as reasoning
                 "<|eom_id|>",  # end of message
                 "<|eot_id|>",  # end of turn
             ]
@@ -150,7 +159,7 @@ class Tokenizer:
             t.append(self.eos_id)
         return t
 
-    def decode(self, t: List[int]) -> str:
+    def decode(self, t: Sequence[int]) -> str:
         """
         Decodes a list of token IDs into a string.
 
@@ -160,15 +169,14 @@ class Tokenizer:
         Returns:
             str: The decoded string.
         """
-        return self.model.decode(t)
+        # typecast is safe here, Tiktoken doesn't do anything list-related with the sequence.
+        return self.model.decode(cast(List[int], t))
 
     @staticmethod
     def _split_whitespaces_or_nonwhitespaces(
         s: str, max_consecutive_slice_len: int
     ) -> Iterator[str]:
         """
-        NOTE: This function is copied from src/data/tokenizer.py
-
         Split the string `s` so that each substring contains no more than `max_consecutive_slice_len`
         consecutive whitespaces or consecutive non-whitespaces
         """
@@ -189,3 +197,99 @@ class Tokenizer:
                     slice_start = i
                     current_slice_len = 1
         yield s[slice_start:]
+
+
+class ParseError(ValueError):
+    pass
+
+
+class MessageFormat:
+    def __init__(self, tokenizer: Tokenizer):
+        self.tokenizer = tokenizer
+
+    def encode_header(self, message: Message) -> List[int]:
+        tokens = []
+        tokens.append(self.tokenizer.special_tokens["<|start_header_id|>"])
+        tokens.extend(self.tokenizer.encode(message["role"], bos=False, eos=False))
+        tokens.append(self.tokenizer.special_tokens["<|end_header_id|>"])
+        tokens.extend(self.tokenizer.encode("\n\n", bos=False, eos=False))
+        return tokens
+
+    def encode_message(self, message: Message) -> List[int]:
+        tokens = self.encode_header(message)
+        if message.get("ipython", False):
+            tokens.append(self.tokenizer.special_tokens["<|python_tag|>"])
+        if message.get("content", ""):
+            tokens.extend(self.tokenizer.encode(message["content"].strip(), bos=False, eos=False))
+        if message.get("eot", False):
+            tokens.append(self.tokenizer.special_tokens["<|eot_id|>"])
+        else:
+            tokens.append(self.tokenizer.special_tokens["<|eom_id|>"])
+        return tokens
+
+    def encode_dialog(self, dialog: Dialog, *, bos: bool, eos: bool) -> List[int]:
+        tokens = []
+        if bos:
+            tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
+        for message in dialog:
+            tokens.extend(self.encode_message(message))
+
+        if dialog[-1]["role"] == "assistant":
+            # Remove step_id if the last turn is from Assistant to allow completion
+            tokens.pop()
+        elif eos:
+            # Add EOS token at the end of this dialog if required
+            tokens.append(self.tokenizer.special_tokens["<|end_of_text|>"])
+        return tokens
+
+    def decode_header(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
+        tokens, _ = self._take(tokens, "<|start_header_id|>")
+        tokens, tokens_role, _ = self._take_until(tokens, "<|end_header_id|>")
+        tokens, _ = self._take(tokens, "\n\n")
+        role = self.tokenizer.decode(tokens_role)
+        return tokens, {"role": cast(Role, role)}  # TODO: check if valid role?
+
+    def decode_message(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
+        tokens, message = self.decode_header(tokens)
+        if len(tokens) > 0 and tokens[0] == self.tokenizer.special_tokens["<|python_tag|>"]:
+            message["ipython"] = True
+            tokens = tokens[1:]
+        tokens, tokens_content, tokens_end = self._take_until(tokens, "<|eot_id|>", "<|eom_id|>")
+        message["content"] = self.tokenizer.decode(tokens_content)
+        message["eot"] = (tokens_end == [self.tokenizer.special_tokens["<|eot_id|>"]])
+        return tokens, message
+
+    def _take(self, tokens: Sequence[int], *expected_strs:str) -> Tuple[Sequence[int], Sequence[int]]:
+        for expected_str in expected_strs:
+            t = self.tokenizer.encode(expected_str, bos=False, eos=False, allowed_special="all")
+            if len(tokens) < len(t):
+                continue
+            if tokens[:len(t)] != t:
+                continue
+            return tokens[len(t):], tokens[:len(t)]
+        raise ParseError(f"Expected any of {expected_strs!r}")
+
+    def _take_until(self, tokens: Sequence[int], *expected_strs:str) -> Tuple[Sequence[int], Sequence[int], Sequence[int]]:
+        best = None
+        for expected_str in expected_strs:
+            t = self.tokenizer.encode(expected_str, bos=False, eos=False, allowed_special="all")
+            if len(tokens) < len(t):
+                continue
+
+            offset = 0
+            try:
+                while offset < len(tokens):
+                    offset = tokens.index(t[0], offset)
+                    if tokens[offset:offset + len(t)] == t:
+                        if best is None or offset < best[0]:
+                            best = (offset, t)
+                        break
+            except ValueError:
+                continue
+        if best is not None:
+            return (
+                tokens[best[0] + len(best[1]):],  # next tokens
+                tokens[:best[0]],  # tokens up to found sequence,
+                tokens[best[0]: best[0] + len(best[1])],  # found sequence itself
+            )
+        raise ParseError(f"Expected tokens followed by any of {expected_strs!r}")
