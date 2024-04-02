@@ -85,7 +85,7 @@ If a question does not make any sense, or is not factually coherent, explain why
         ],
     ]
     results = generator.chat_completion(
-        dialogs,  # type: ignore
+        dialogs,
         max_gen_len=max_gen_len,
         temperature=temperature,
         top_p=top_p,

@@ -4,7 +4,20 @@
 import os
 from logging import getLogger
 from pathlib import Path
-from typing import cast, AbstractSet, Any, Collection, Dict, Iterator, List, Literal, Sequence, Tuple, TypedDict, Union
+from typing import (
+    AbstractSet,
+    cast,
+    Collection,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    NamedTuple,
+    Sequence,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 import tiktoken
 from tiktoken.load import load_tiktoken_bpe
@@ -33,7 +46,7 @@ class Tokenizer:
 
     num_reserved_special_tokens = 256
 
-    pat_str = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+    pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"  # noqa: E501
 
     def __init__(self, model_path: str):
         """
@@ -47,25 +60,21 @@ class Tokenizer:
 
         mergeable_ranks = load_tiktoken_bpe(model_path)
         num_base_tokens = len(mergeable_ranks)
-        special_tokens = (
-            [
-                "<|begin_of_text|>",
-                "<|end_of_text|>",
-                "<|reserved_special_token_0|>",
-                "<|reserved_special_token_1|>",
-                "<|reserved_special_token_2|>",
-                "<|reserved_special_token_3|>",
-                "<|start_header_id|>",
-                "<|end_header_id|>",
-                "<|reserved_special_token_4|>",
-                "<|eot_id|>",  # end of turn
-            ]
-            + [
-                f"<|reserved_special_token_{i}|>"
-                for i in range(5, self.num_reserved_special_tokens - 5)
-            ]
-        )
-        assert (num_base_tokens + len(special_tokens)) % 8 == 0
+        special_tokens = [
+            "<|begin_of_text|>",
+            "<|end_of_text|>",
+            "<|reserved_special_token_0|>",
+            "<|reserved_special_token_1|>",
+            "<|reserved_special_token_2|>",
+            "<|reserved_special_token_3|>",
+            "<|start_header_id|>",
+            "<|end_header_id|>",
+            "<|reserved_special_token_4|>",
+            "<|eot_id|>",  # end of turn
+        ] + [
+            f"<|reserved_special_token_{i}|>"
+            for i in range(5, self.num_reserved_special_tokens - 5)
+        ]
         self.special_tokens = {
             token: num_base_tokens + i for i, token in enumerate(special_tokens)
         }
@@ -107,7 +116,7 @@ class Tokenizer:
             bos (bool): Whether to prepend the beginning-of-sequence token.
             eos (bool): Whether to append the end-of-sequence token.
             allowed_tokens ("all"|set[str]): allowed special tokens in string
-            disallowed_tokens ("all"|set[str]): TODO
+            disallowed_tokens ("all"|set[str]): special tokens that raise an error when in string
 
         Returns:
             list[int]: A list of token IDs.
@@ -197,6 +206,11 @@ class ParseError(ValueError):
     pass
 
 
+class ParseResult(NamedTuple):
+    remainder: Sequence[int]
+    message: Message
+
+
 class MessageFormat:
     def __init__(self, tokenizer: Tokenizer):
         self.tokenizer = tokenizer
@@ -212,7 +226,9 @@ class MessageFormat:
     def encode_message(self, message: Message) -> List[int]:
         tokens = self.encode_header(message)
         if message.get("content", ""):
-            tokens.extend(self.tokenizer.encode(message["content"].strip(), bos=False, eos=False))
+            tokens.extend(
+                self.tokenizer.encode(message["content"].strip(), bos=False, eos=False)
+            )
         tokens.append(self.tokenizer.special_tokens["<|eot_id|>"])
         return tokens
 
@@ -231,33 +247,48 @@ class MessageFormat:
             tokens.pop()
         return tokens
 
-    def decode_header(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
+    def decode_header(self, tokens: Sequence[int]) -> ParseResult:
         tokens, _ = self._take(tokens, "<|start_header_id|>")
         tokens, tokens_role, _ = self._take_until(tokens, "<|end_header_id|>")
         tokens, _ = self._take(tokens, "\n\n")
         role = self.tokenizer.decode(tokens_role)
-        return tokens, {"role": cast(Role, role)}  # TODO: check if valid role?
+        return ParseResult(tokens, {"role": cast(Role, role)})
 
-    def decode_message(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
+    def decode_message(self, tokens: Sequence[int]) -> ParseResult:
         tokens, message = self.decode_header(tokens)
-        tokens, tokens_content, _ = self._take_until(tokens, "<|eot_id|>")
+        # Try finding the eot, but if the message was cut short by max
+        # sequence length, assume the entire remainder is the message body.
+        try:
+            tokens, tokens_content, _ = self._take_until(tokens, "<|eot_id|>")
+        except ParseError:
+            tokens, tokens_content = [], tokens
         message["content"] = self.tokenizer.decode(tokens_content)
-        return tokens, message
+        return ParseResult(tokens, message)
 
-    def _take(self, tokens: Sequence[int], *expected_strs:str) -> Tuple[Sequence[int], Sequence[int]]:
+    def _take(
+        self, tokens: Sequence[int], *expected_strs: str
+    ) -> Tuple[Sequence[int], Sequence[int]]:
+        """Assert that tokens starts with one of the expected sequences."""
         for expected_str in expected_strs:
-            t = self.tokenizer.encode(expected_str, bos=False, eos=False, allowed_special="all")
+            t = self.tokenizer.encode(
+                expected_str, bos=False, eos=False, allowed_special="all"
+            )
             if len(tokens) < len(t):
                 continue
-            if tokens[:len(t)] != t:
+            if tokens[: len(t)] != t:
                 continue
-            return tokens[len(t):], tokens[:len(t)]
+            return tokens[len(t) :], tokens[: len(t)]
         raise ParseError(f"Expected any of {expected_strs!r}")
 
-    def _take_until(self, tokens: Sequence[int], *expected_strs:str) -> Tuple[Sequence[int], Sequence[int], Sequence[int]]:
+    def _take_until(
+        self, tokens: Sequence[int], *expected_strs: str
+    ) -> Tuple[Sequence[int], Sequence[int], Sequence[int]]:
+        """Take tokens from `tokens` until one of the expected sequences occurs."""
         best = None
         for expected_str in expected_strs:
-            t = self.tokenizer.encode(expected_str, bos=False, eos=False, allowed_special="all")
+            t = self.tokenizer.encode(
+                expected_str, bos=False, eos=False, allowed_special="all"
+            )
             if len(tokens) < len(t):
                 continue
 
@@ -265,7 +296,7 @@ class MessageFormat:
             try:
                 while offset < len(tokens):
                     offset = tokens.index(t[0], offset)
-                    if tokens[offset:offset + len(t)] == t:
+                    if tokens[offset : offset + len(t)] == t:
                         if best is None or offset < best[0]:
                             best = (offset, t)
                         break
@@ -273,8 +304,8 @@ class MessageFormat:
                 continue
         if best is not None:
             return (
-                tokens[best[0] + len(best[1]):],  # next tokens
-                tokens[:best[0]],  # tokens up to found sequence,
-                tokens[best[0]: best[0] + len(best[1])],  # found sequence itself
+                tokens[best[0] + len(best[1]) :],  # next tokens
+                tokens[: best[0]],  # tokens up to found sequence,
+                tokens[best[0] : best[0] + len(best[1])],  # found sequence itself
             )
         raise ParseError(f"Expected tokens followed by any of {expected_strs!r}")

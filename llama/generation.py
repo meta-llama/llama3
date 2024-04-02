@@ -98,7 +98,7 @@ class Llama:
             **params,
         )
         tokenizer = Tokenizer(model_path=tokenizer_path)
-        model_args.vocab_size = tokenizer.n_words
+        assert model_args.vocab_size == tokenizer.n_words
         torch.set_default_tensor_type(torch.cuda.HalfTensor)
         model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=False)
@@ -168,7 +168,7 @@ class Llama:
                 ignore_index=pad_id,
             )
 
-        stop_tokens = torch.tensor(list(self.tokenizer.stop_tokens), dtype=torch.long)
+        stop_tokens = torch.tensor(list(self.tokenizer.stop_tokens))
 
         for cur_pos in range(min_prompt_len, total_len):
             logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
@@ -323,10 +323,7 @@ class Llama:
         if logprobs:
             return [
                 {
-                    "generation": {
-                        "role": "assistant",
-                        "content": self.tokenizer.decode(t),
-                    },
+                    "generation": self.formatter.decode_message(t).message,
                     "tokens": [self.tokenizer.decode([x]) for x in t],
                     "logprobs": logprobs_i,
                 }
@@ -334,7 +331,7 @@ class Llama:
             ]
         return [
             {
-                "generation": self.formatter.decode_message(t)[1]
+                "generation": self.formatter.decode_message(t).message
             }
             for t in generation_tokens
         ]
