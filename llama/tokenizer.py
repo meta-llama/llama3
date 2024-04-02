@@ -57,7 +57,7 @@ class Tokenizer:
                 "<|reserved_special_token_3|>",
                 "<|start_header_id|>",
                 "<|end_header_id|>",
-                "<|reserverd_special_token_4|>",
+                "<|reserved_special_token_4|>",
                 "<|eot_id|>",  # end of turn
             ]
             + [
