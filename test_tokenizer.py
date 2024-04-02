@@ -36,7 +36,6 @@ class TokenizerTests(TestCase):
         message = {
             "role": "user",
             "content": "This is a test sentence.",
-            "eot": True
         }
         self.assertEqual(
             self.formatter.encode_message(message),
@@ -67,7 +66,6 @@ class TokenizerTests(TestCase):
                 {
                     "role": "user",
                     "content": "This is a test sentence.",
-                    "eot": True
                 },
             )
         )
@@ -77,20 +75,36 @@ class TokenizerTests(TestCase):
             {
                 "role": "user",
                 "content": "This is a test sentence.",
-                "eot": True
+            },
+            {
+                "role": "assistant",
+                "content": "This is a response.",
             }
         ]
 
-        self.assertEqual(
-            self.formatter.encode_dialog(dialog, bos=True, eos=True),
-            [
-                128000,  # <|begin_of_text|>
-                128006,  # <|start_header_id|>
-                882,  # "user"
-                128007,  # <|end_of_header|>
-                271,  # "\n\n"
-                2028, 374, 264, 1296, 11914, 13,  # This is a test sentence.
-                128009,  # <|eot_id|>
-                128001,  # <|end_of_text|>
-            ]
-        )
+        # Note: no <|end_of_text|> or <|end_of_turn|> as eos=False to allow for completion
+        for eos in [True, False]:
+            with self.subTest(eos=eos):
+                self.assertEqual(
+                    self.formatter.encode_dialog(dialog, bos=True, eos=eos),
+                    [
+                        128000,  # <|begin_of_text|>
+                        128006,  # <|start_header_id|>
+                        882,     # "user"
+                        128007,  # <|end_of_header|>
+                        271,     # "\n\n"
+                        2028, 374, 264, 1296, 11914, 13,  # "This is a test sentence."
+                        128009,  # <|eot_id|>
+                        128006,  # <|start_header_id|>
+                        78191,   # "assistant"
+                        128007,  # <|end_of_header|>
+                        271,     # "\n\n"
+                        2028, 374, 264, 2077, 13,  # "This is a response."
+                    ] + (
+                        [
+                            128009,  # <|end_of_turn|>
+                            128001,  # <|end_of_text|>
+                        ]
+                        if eos else []
+                    )
+                )

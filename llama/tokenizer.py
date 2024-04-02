@@ -19,7 +19,6 @@ Role = Literal["system", "user", "assistant"]
 class Message(TypedDict, total=False):
     role: Role
     content: str
-    eot: bool
 
 
 Dialog = Sequence[Message]
@@ -58,12 +57,12 @@ class Tokenizer:
                 "<|reserved_special_token_3|>",
                 "<|start_header_id|>",
                 "<|end_header_id|>",
-                "<|eom_id|>",  # end of message
+                "<|reserverd_special_token_4|>",
                 "<|eot_id|>",  # end of turn
             ]
             + [
                 f"<|reserved_special_token_{i}|>"
-                for i in range(4, self.num_reserved_special_tokens - 6)
+                for i in range(5, self.num_reserved_special_tokens - 5)
             ]
         )
         assert (num_base_tokens + len(special_tokens)) % 8 == 0
@@ -215,10 +214,7 @@ class MessageFormat:
         tokens = self.encode_header(message)
         if message.get("content", ""):
             tokens.extend(self.tokenizer.encode(message["content"].strip(), bos=False, eos=False))
-        if message.get("eot", False):
-            tokens.append(self.tokenizer.special_tokens["<|eot_id|>"])
-        else:
-            tokens.append(self.tokenizer.special_tokens["<|eom_id|>"])
+        tokens.append(self.tokenizer.special_tokens["<|eot_id|>"])
         return tokens
 
     def encode_dialog(self, dialog: Dialog, *, bos: bool, eos: bool) -> List[int]:
@@ -228,12 +224,12 @@ class MessageFormat:
         for message in dialog:
             tokens.extend(self.encode_message(message))
 
-        if dialog[-1]["role"] == "assistant":
-            # Remove step_id if the last turn is from Assistant to allow completion
-            tokens.pop()
-        elif eos:
+        if eos:
             # Add EOS token at the end of this dialog if required
             tokens.append(self.tokenizer.special_tokens["<|end_of_text|>"])
+        elif dialog[-1]["role"] == "assistant":
+            # Remove <|eot_id|> if the last turn is from Assistant to allow completion
+            tokens.pop()
         return tokens
 
     def decode_header(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
@@ -245,9 +241,8 @@ class MessageFormat:
 
     def decode_message(self, tokens: Sequence[int]) -> Tuple[Sequence[int], Message]:
         tokens, message = self.decode_header(tokens)
-        tokens, tokens_content, tokens_end = self._take_until(tokens, "<|eot_id|>", "<|eom_id|>")
+        tokens, tokens_content, _ = self._take_until(tokens, "<|eot_id|>")
         message["content"] = self.tokenizer.decode(tokens_content)
-        message["eot"] = (tokens_end == [self.tokenizer.special_tokens["<|eot_id|>"]])
         return tokens, message
 
     def _take(self, tokens: Sequence[int], *expected_strs:str) -> Tuple[Sequence[int], Sequence[int]]:
