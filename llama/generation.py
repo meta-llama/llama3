@@ -17,7 +17,7 @@ from fairscale.nn.model_parallel.initialize import (
 )
 
 from llama.model import ModelArgs, Transformer
-from llama.tokenizer import Dialog, Message, MessageFormat, Tokenizer
+from llama.tokenizer import Dialog, Message, ChatFormat, Tokenizer
 
 
 class CompletionPrediction(TypedDict, total=False):
@@ -109,7 +109,7 @@ class Llama:
     def __init__(self, model: Transformer, tokenizer: Tokenizer):
         self.model = model
         self.tokenizer = tokenizer
-        self.formatter = MessageFormat(tokenizer)
+        self.formatter = ChatFormat(tokenizer)
 
     @torch.inference_mode()
     def generate(
@@ -212,8 +212,8 @@ class Llama:
             for stop_token in self.tokenizer.stop_tokens:
                 try:
                     eos_idx = toks.index(stop_token)
-                    toks = toks[: eos_idx + 1]
-                    probs = probs[: eos_idx + 1] if logprobs else None
+                    toks = toks[: eos_idx]
+                    probs = probs[: eos_idx] if logprobs else None
                 except ValueError:
                     pass
             out_tokens.append(toks)
@@ -307,7 +307,7 @@ class Llama:
             max_gen_len = self.model.params.max_seq_len - 1
 
         prompt_tokens = [
-            self.formatter.encode_dialog(dialog, bos=True, eos=False)
+            self.formatter.encode_dialog_prompt(dialog)
             for dialog in dialogs
         ]
         generation_tokens, generation_logprobs = self.generate(
@@ -320,14 +320,22 @@ class Llama:
         if logprobs:
             return [
                 {
-                    "generation": self.formatter.decode_message(t).message,
+                    "generation": {
+                        "role": "assistant",
+                        "content": self.tokenizer.decode(t),
+                    },
                     "tokens": [self.tokenizer.decode([x]) for x in t],
                     "logprobs": logprobs_i,
                 }
                 for t, logprobs_i in zip(generation_tokens, generation_logprobs)
             ]
         return [
-            {"generation": self.formatter.decode_message(t).message}
+            {
+                "generation": {
+                    "role": "assistant",
+                    "content": self.tokenizer.decode(t),
+                },
+            }
             for t in generation_tokens
         ]
 

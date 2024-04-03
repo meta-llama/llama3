@@ -12,9 +12,7 @@ from typing import (
     Iterator,
     List,
     Literal,
-    NamedTuple,
     Sequence,
-    Tuple,
     TypedDict,
     Union,
 )
@@ -29,7 +27,7 @@ logger = getLogger(__name__)
 Role = Literal["system", "user", "assistant"]
 
 
-class Message(TypedDict, total=False):
+class Message(TypedDict):
     role: Role
     content: str
 
@@ -202,16 +200,7 @@ class Tokenizer:
         yield s[slice_start:]
 
 
-class ParseError(ValueError):
-    pass
-
-
-class ParseResult(NamedTuple):
-    remainder: Sequence[int]
-    message: Message
-
-
-class MessageFormat:
+class ChatFormat:
     def __init__(self, tokenizer: Tokenizer):
         self.tokenizer = tokenizer
 
@@ -225,87 +214,17 @@ class MessageFormat:
 
     def encode_message(self, message: Message) -> List[int]:
         tokens = self.encode_header(message)
-        if message.get("content", ""):
-            tokens.extend(
-                self.tokenizer.encode(message["content"].strip(), bos=False, eos=False)
-            )
+        tokens.extend(
+            self.tokenizer.encode(message["content"].strip(), bos=False, eos=False)
+        )
         tokens.append(self.tokenizer.special_tokens["<|eot_id|>"])
         return tokens
 
-    def encode_dialog(self, dialog: Dialog, *, bos: bool, eos: bool) -> List[int]:
+    def encode_dialog_prompt(self, dialog: Dialog) -> List[int]:
         tokens = []
-        if bos:
-            tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
+        tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
         for message in dialog:
             tokens.extend(self.encode_message(message))
-
-        if eos:
-            # Add EOS token at the end of this dialog if required
-            tokens.append(self.tokenizer.special_tokens["<|end_of_text|>"])
-        elif dialog[-1]["role"] == "assistant":
-            # Remove <|eot_id|> if the last turn is from Assistant to allow completion
-            tokens.pop()
+        # Add the start of an assistant message for the model to complete
+        tokens.extend(self.encode_header({"role": "assistant", "content": ""}))
         return tokens
-
-    def decode_header(self, tokens: Sequence[int]) -> ParseResult:
-        tokens, _ = self._take(tokens, "<|start_header_id|>")
-        tokens, tokens_role, _ = self._take_until(tokens, "<|end_header_id|>")
-        tokens, _ = self._take(tokens, "\n\n")
-        role = self.tokenizer.decode(tokens_role)
-        return ParseResult(tokens, {"role": cast(Role, role)})
-
-    def decode_message(self, tokens: Sequence[int]) -> ParseResult:
-        tokens, message = self.decode_header(tokens)
-        # Try finding the eot, but if the message was cut short by max
-        # sequence length, assume the entire remainder is the message body.
-        try:
-            tokens, tokens_content, _ = self._take_until(tokens, "<|eot_id|>")
-        except ParseError:
-            tokens, tokens_content = [], tokens
-        message["content"] = self.tokenizer.decode(tokens_content)
-        return ParseResult(tokens, message)
-
-    def _take(
-        self, tokens: Sequence[int], *expected_strs: str
-    ) -> Tuple[Sequence[int], Sequence[int]]:
-        """Assert that tokens starts with one of the expected sequences."""
-        for expected_str in expected_strs:
-            t = self.tokenizer.encode(
-                expected_str, bos=False, eos=False, allowed_special="all"
-            )
-            if len(tokens) < len(t):
-                continue
-            if tokens[: len(t)] != t:
-                continue
-            return tokens[len(t) :], tokens[: len(t)]
-        raise ParseError(f"Expected any of {expected_strs!r}")
-
-    def _take_until(
-        self, tokens: Sequence[int], *expected_strs: str
-    ) -> Tuple[Sequence[int], Sequence[int], Sequence[int]]:
-        """Take tokens from `tokens` until one of the expected sequences occurs."""
-        best = None
-        for expected_str in expected_strs:
-            t = self.tokenizer.encode(
-                expected_str, bos=False, eos=False, allowed_special="all"
-            )
-            if len(tokens) < len(t):
-                continue
-
-            offset = 0
-            try:
-                while offset < len(tokens):
-                    offset = tokens.index(t[0], offset)
-                    if tokens[offset : offset + len(t)] == t:
-                        if best is None or offset < best[0]:
-                            best = (offset, t)
-                        break
-            except ValueError:
-                continue
-        if best is not None:
-            return (
-                tokens[best[0] + len(best[1]) :],  # next tokens
-                tokens[: best[0]],  # tokens up to found sequence,
-                tokens[best[0] : best[0] + len(best[1])],  # found sequence itself
-            )
-        raise ParseError(f"Expected tokens followed by any of {expected_strs!r}")
