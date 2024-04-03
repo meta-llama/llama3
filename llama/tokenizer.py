@@ -225,11 +225,6 @@ class ChatFormat:
         tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
         for message in dialog:
             tokens.extend(self.encode_message(message))
-        # If dialog does not end yet with a start of an assistant message to
-        # complete, we add it.
-        if not dialog or dialog[-1]["role"] != "assistant":
-            tokens.extend(self.encode_message({"role": "assistant", "content": ""}))
-        # Remove <|eot_id|> from Assistant message to allow completion
-        eot_id = tokens.pop()
-        assert eot_id == self.tokenizer.special_tokens["<|eot_id|>"]
+        # Add the start of an assistant message for the model to complete
+        tokens.extend(self.encode_header({"role": "assistant", "content": ""}))
         return tokens
