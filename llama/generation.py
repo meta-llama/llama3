@@ -102,6 +102,9 @@ class Llama:
         torch.set_default_tensor_type(torch.cuda.HalfTensor)
         model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=False)
+        from torchao.quantization import change_linear_weights_to_int4_woqtensors
+        change_linear_weights_to_int4_woqtensors(model)
+
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
         return Llama(model, tokenizer)
