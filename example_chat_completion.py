@@ -2,7 +2,7 @@
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 from typing import List, Optional
-
+import torch
 import fire
 
 from llama import Dialog, Llama
@@ -68,21 +68,29 @@ These are just a few of the many attractions that Paris has to offer. With so mu
             {"role": "user", "content": "How to go from Beijing to NY?"},
         ],
     ]
+    import time
+    torch.cuda.reset_peak_memory_stats()
+    s = time.time()
     results = generator.chat_completion(
         dialogs,
         max_gen_len=max_gen_len,
         temperature=temperature,
         top_p=top_p,
+        logprobs=True,
     )
-
+    f = time.time()
+    mem = torch.cuda.max_memory_allocated()/1e9
+    tok_count = 0
     for dialog, result in zip(dialogs, results):
-        for msg in dialog:
-            print(f"{msg['role'].capitalize()}: {msg['content']}\n")
-        print(
-            f"> {result['generation']['role'].capitalize()}: {result['generation']['content']}"
-        )
-        print("\n==================================\n")
-
+        tok_count += len(result["tokens"])
+        # for msg in dialog:
+        #     print(f"{msg['role'].capitalize()}: {msg['content']}\n")
+        # print(
+        #     f"> {result['generation']['role'].capitalize()}: {result['generation']['content']}"
+        # )
+        # print("\n==================================\n")
+    t=f-s
+    print(f"total time: {t:.2f}s, tokens: {tok_count}, tok/s: {tok_count/t:.2f}, peak_memory: {mem:.2f}GB")
 
 if __name__ == "__main__":
     fire.Fire(main)

@@ -99,11 +99,28 @@ class Llama:
         )
         tokenizer = Tokenizer(model_path=tokenizer_path)
         assert model_args.vocab_size == tokenizer.n_words
-        torch.set_default_tensor_type(torch.cuda.HalfTensor)
+        torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
         model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=False)
-        from torchao.quantization import change_linear_weights_to_int4_woqtensors
-        change_linear_weights_to_int4_woqtensors(model)
+
+        # baseline
+        # total time: 26.30s, tokens: 483, tok/s: 18.37, peak_memory: 4.28GB
+
+        # int4
+        # total time: 23.58s, tokens: 483, tok/s: 20.48, peak_memory: 4.28GB
+        # from torchao.quantization import change_linear_weights_to_int4_woqtensors
+        # change_linear_weights_to_int4_woqtensors(model)
+
+        # int8 dynamic
+        # total time: 24.30s, tokens: 483, tok/s: 19.88, peak_memory: 4.28GB
+        # from torchao.quantization import change_linear_weights_to_int8_dqtensors
+        # change_linear_weights_to_int8_dqtensors(model)
+
+        # int8 weight only
+        # total time: 25.33s, tokens: 483, tok/s: 19.07, peak_memory: 4.28GB
+        # from torchao.quantization import change_linear_weights_to_int8_woqtensors
+        # change_linear_weights_to_int8_woqtensors(model)
+
 
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
