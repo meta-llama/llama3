@@ -1,6 +1,6 @@
 # Llama 3
 
-We are unlocking the power of large language models. Our latest version of Llama is now accessible to individuals, creators, researchers, and businesses of all sizes so that they can experiment, innovate, and scale their ideas responsibly. 
+We are unlocking the power of large language models. Our latest version of Llama is now accessible to individuals, creators, researchers, and businesses of all sizes so that they can experiment, innovate, and scale their ideas responsibly.
 
 This release includes model weights and starting code for pre-trained and instruction tuned Llama 3 language models — including sizes of 7B to 70B parameters.
 
@@ -22,7 +22,7 @@ We are also providing downloads on [Hugging Face](https://huggingface.co/meta-ll
 
 ## Quick Start
 
-You can follow the steps below to quickly get up and running with Llama 2 models. These steps will let you run quick inference locally. For more examples, see the [Llama recipes repository](https://github.com/facebookresearch/llama-recipes). 
+You can follow the steps below to quickly get up and running with Llama 3 models. These steps will let you run quick inference locally. For more examples, see the [Llama recipes repository](https://github.com/facebookresearch/llama-recipes).
 
 1. In a conda env with PyTorch / CUDA available clone and download this repository.
 
@@ -34,9 +34,9 @@ You can follow the steps below to quickly get up and running with Llama 2 models
 
 4. Once registered, you will get an email with a URL to download the models. You will need this URL when you run the download.sh script.
 
-5. Once you get the email, navigate to your downloaded llama repository and run the download.sh script. 
+5. Once you get the email, navigate to your downloaded llama repository and run the download.sh script.
     - Make sure to grant execution permissions to the download.sh script
-    - During this process, you will be prompted to enter the URL from the email. 
+    - During this process, you will be prompted to enter the URL from the email.
     - Do not use the “Copy Link” option but rather make sure to manually copy the link from the email.
 
 6. Once the model/s you want have been downloaded, you can run the model locally using the command below:
@@ -61,7 +61,7 @@ Different models require different model-parallel (MP) values:
 | 8B     | 1  |
 | 70B    | 8  |
 
-All models support sequence length up to 4096 tokens, but we pre-allocate the cache according to `max_seq_len` and `max_batch_size` values. So set those according to your hardware.
+All models support sequence length up to 8192 tokens, but we pre-allocate the cache according to `max_seq_len` and `max_batch_size` values. So set those according to your hardware.
 
 ### Pretrained Models
 
@@ -107,10 +107,10 @@ See [MODEL_CARD.md](..).
 
 ## License
 
-Our model and weights are licensed for both researchers and commercial entities, upholding the principles of openness. Our mission is to empower individuals, and industry through this opportunity, while fostering an environment of discovery and ethical AI advancements. 
+Our model and weights are licensed for both researchers and commercial entities, upholding the principles of openness. Our mission is to empower individuals, and industry through this opportunity, while fostering an environment of discovery and ethical AI advancements.
 
 See the [LICENSE](..) file, as well as our accompanying [Acceptable Use Policy](USE_POLICY.md)
 
 ## Questions
 
-For common questions, the FAQ can be found [here](https://llama.meta.com/faq) which will be kept up to date over time as new questions arise. 
+For common questions, the FAQ can be found [here](https://llama.meta.com/faq) which will be kept up to date over time as new questions arise.
