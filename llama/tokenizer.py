@@ -82,7 +82,7 @@ class Tokenizer:
             mergeable_ranks=mergeable_ranks,
             special_tokens=self.special_tokens,
         )
-        logger.info(f"Reloaded SentencePiece model from {model_path}")
+        logger.info(f"Reloaded tiktoken model from {model_path}")
 
         # BOS / EOS token IDs
         self.n_words: int = self.model.n_vocab
