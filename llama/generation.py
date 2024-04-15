@@ -17,7 +17,7 @@ from fairscale.nn.model_parallel.initialize import (
 )
 
 from llama.model import ModelArgs, Transformer
-from llama.tokenizer import Dialog, Message, ChatFormat, Tokenizer
+from llama.tokenizer import ChatFormat, Dialog, Message, Tokenizer
 
 
 class CompletionPrediction(TypedDict, total=False):
@@ -43,7 +43,7 @@ class Llama:
         seed: int = 1,
     ) -> "Llama":
         """
-        Build a Llama instance by initializing and loading a pre-trained model.
+        Build a Llama instance by initializing and loading a model checkpoint.
 
         Args:
             ckpt_dir (str): Path to the directory containing checkpoint files.
@@ -63,7 +63,6 @@ class Llama:
         Note:
             This method initializes the distributed process group, sets the device to CUDA,
             and loads the pre-trained model and tokenizer.
-
         """
         if not torch.distributed.is_initialized():
             torch.distributed.init_process_group("nccl")
@@ -99,7 +98,10 @@ class Llama:
         )
         tokenizer = Tokenizer(model_path=tokenizer_path)
         assert model_args.vocab_size == tokenizer.n_words
-        torch.set_default_tensor_type(torch.cuda.HalfTensor)
+        if torch.cuda.is_bf16_supported():
+            torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
+        else:
+            torch.set_default_tensor_type(torch.cuda.HalfTensor)
         model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=False)
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
@@ -212,8 +214,8 @@ class Llama:
             for stop_token in self.tokenizer.stop_tokens:
                 try:
                     eos_idx = toks.index(stop_token)
-                    toks = toks[: eos_idx]
-                    probs = probs[: eos_idx] if logprobs else None
+                    toks = toks[:eos_idx]
+                    probs = probs[:eos_idx] if logprobs else None
                 except ValueError:
                     pass
             out_tokens.append(toks)
@@ -293,22 +295,16 @@ class Llama:
         Returns:
             List[ChatPrediction]: List of chat predictions, each containing the assistant's generated response.
 
-        Raises:
-            AssertionError: If the last message in a dialog is not from the user.
-            AssertionError: If the dialog roles are not in the required 'user', 'assistant', and optional 'system' order.
-
         Note:
             This method generates assistant responses for the provided conversational dialogs.
             It employs nucleus sampling to introduce controlled randomness in text generation.
             If logprobs is True, token log probabilities are computed for each generated token.
-
         """
         if max_gen_len is None:
             max_gen_len = self.model.params.max_seq_len - 1
 
         prompt_tokens = [
-            self.formatter.encode_dialog_prompt(dialog)
-            for dialog in dialogs
+            self.formatter.encode_dialog_prompt(dialog) for dialog in dialogs
         ]
         generation_tokens, generation_logprobs = self.generate(
             prompt_tokens=prompt_tokens,
@@ -354,7 +350,6 @@ def sample_top_p(probs, p):
     Note:
         Top-p sampling selects the smallest set of tokens whose cumulative probability mass
         exceeds the threshold p. The distribution is renormalized based on the selected tokens.
-
     """
     probs_sort, probs_idx = torch.sort(probs, dim=-1, descending=True)
     probs_sum = torch.cumsum(probs_sort, dim=-1)

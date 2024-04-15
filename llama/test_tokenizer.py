@@ -3,9 +3,11 @@
 
 import os
 from unittest import TestCase
-from llama.tokenizer import ChatFormat, Tokenizer
+
+from llama.tokenizer import ChatFormat, Dialog, Message, Tokenizer
 
 # TOKENIZER_PATH=<path> python -m unittest llama/test_tokenizer.py
+
 
 class TokenizerTests(TestCase):
     def setUp(self):
@@ -20,11 +22,7 @@ class TokenizerTests(TestCase):
 
     def test_encode(self):
         self.assertEqual(
-            self.tokenizer.encode(
-                "This is a test sentence.",
-                bos=True,
-                eos=True
-            ),
+            self.tokenizer.encode("This is a test sentence.", bos=True, eos=True),
             [128000, 2028, 374, 264, 1296, 11914, 13, 128001],
         )
 
@@ -37,7 +35,7 @@ class TokenizerTests(TestCase):
         )
 
     def test_encode_message(self):
-        message = {
+        message: Message = {
             "role": "user",
             "content": "This is a test sentence.",
         }
@@ -48,13 +46,18 @@ class TokenizerTests(TestCase):
                 882,  # "user"
                 128007,  # <|end_of_header|>
                 271,  # "\n\n"
-                2028, 374, 264, 1296, 11914, 13,  # This is a test sentence.
+                2028,
+                374,
+                264,
+                1296,
+                11914,
+                13,  # This is a test sentence.
                 128009,  # <|eot_id|>
-            ]
+            ],
         )
 
     def test_encode_dialog(self):
-        dialog = [
+        dialog: Dialog = [
             {
                 "role": "system",
                 "content": "This is a test sentence.",
@@ -62,27 +65,36 @@ class TokenizerTests(TestCase):
             {
                 "role": "user",
                 "content": "This is a response.",
-            }
+            },
         ]
         self.assertEqual(
             self.format.encode_dialog_prompt(dialog),
             [
                 128000,  # <|begin_of_text|>
                 128006,  # <|start_header_id|>
-                9125,     # "system"
+                9125,  # "system"
                 128007,  # <|end_of_header|>
-                271,     # "\n\n"
-                2028, 374, 264, 1296, 11914, 13,  # "This is a test sentence."
+                271,  # "\n\n"
+                2028,
+                374,
+                264,
+                1296,
+                11914,
+                13,  # "This is a test sentence."
                 128009,  # <|eot_id|>
                 128006,  # <|start_header_id|>
-                882,     # "user"
+                882,  # "user"
                 128007,  # <|end_of_header|>
-                271,     # "\n\n"
-                2028, 374, 264, 2077, 13,  # "This is a response.",
+                271,  # "\n\n"
+                2028,
+                374,
+                264,
+                2077,
+                13,  # "This is a response.",
                 128009,  # <|eot_id|>
                 128006,  # <|start_header_id|>
-                78191,   # "assistant"
+                78191,  # "assistant"
                 128007,  # <|end_of_header|>
-                271,     # "\n\n"
-            ]
+                271,  # "\n\n"
+            ],
         )

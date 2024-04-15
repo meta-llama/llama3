@@ -18,19 +18,15 @@ def main(
     max_gen_len: Optional[int] = None,
 ):
     """
-    Entry point of the program for generating text using a pretrained model.
+    Examples to run with the models finetuned for chat. Prompts correspond of chat
+    turns between the user and assistant with the final one always being the user.
 
-    Args:
-        ckpt_dir (str): The directory containing checkpoint files for the pretrained model.
-        tokenizer_path (str): The path to the tokenizer model used for text encoding/decoding.
-        temperature (float, optional): The temperature value for controlling randomness in generation.
-            Defaults to 0.6.
-        top_p (float, optional): The top-p sampling parameter for controlling diversity in generation.
-            Defaults to 0.9.
-        max_seq_len (int, optional): The maximum sequence length for input prompts. Defaults to 512.
-        max_batch_size (int, optional): The maximum batch size for generating sequences. Defaults to 8.
-        max_gen_len (int, optional): The maximum length of generated sequences. If None, it will be
-            set to the model's max sequence length. Defaults to None.
+    An optional system prompt at the beginning to control how the model should respond
+    is also supported.
+
+    The context window of llama3 models is 8192 tokens, so `max_seq_len` needs to be <= 8192.
+
+    `max_gen_len` is optional because finetuned models are able to stop generations naturally.
     """
     generator = Llama.build(
         ckpt_dir=ckpt_dir,
