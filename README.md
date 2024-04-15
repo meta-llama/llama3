@@ -93,7 +93,7 @@ torchrun --nproc_per_node 1 example_chat_completion.py \
 ```
 
 Llama 3 is a new technology that carries potential risks with use. Testing conducted to date has not — and could not — cover all scenarios.
-In order to help developers address these risks, we have created the [Responsible Use Guide][(https://ai.meta.com/static-resource/responsible-use-guide/).
+In order to help developers address these risks, we have created the [Responsible Use Guide](https://ai.meta.com/static-resource/responsible-use-guide/).
 
 ## Issues
 
