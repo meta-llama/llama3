@@ -103,7 +103,7 @@ Please report any software “bug”, or other problems with the models through 
 - Reporting bugs and security concerns: [facebook.com/whitehat/info](http://facebook.com/whitehat/info)
 
 ## Model Card
-See [MODEL_CARD.md](..).
+See [MODEL_CARD.md](MODEL_CARD.md).
 
 ## License
 
