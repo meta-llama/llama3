@@ -2,7 +2,7 @@
 
 We are unlocking the power of large language models. Our latest version of Llama is now accessible to individuals, creators, researchers, and businesses of all sizes so that they can experiment, innovate, and scale their ideas responsibly.
 
-This release includes model weights and starting code for pre-trained and instruction tuned Llama 3 language models — including sizes of 7B to 70B parameters.
+This release includes model weights and starting code for pre-trained and instruction tuned Llama 3 language models — including sizes of 8B to 70B parameters.
 
 This repository is intended as a minimal example to load Llama 3 models and run inference. For more detailed examples, see [llama-recipes](https://github.com/facebookresearch/llama-recipes/).
 
