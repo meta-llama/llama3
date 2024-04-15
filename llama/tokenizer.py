@@ -37,7 +37,7 @@ Dialog = Sequence[Message]
 
 class Tokenizer:
     """
-    tokenizing and encoding/decoding text using the Tiktoken tokenizer.
+    Tokenizing and encoding/decoding text using the Tiktoken tokenizer.
     """
 
     special_tokens: Dict[str, int]
@@ -53,7 +53,6 @@ class Tokenizer:
         Args:
             model_path (str): The path to the Tiktoken model file.
         """
-        # reload tokenizer
         assert os.path.isfile(model_path), model_path
 
         mergeable_ranks = load_tiktoken_bpe(model_path)
@@ -84,8 +83,8 @@ class Tokenizer:
         )
         logger.info(f"Reloaded tiktoken model from {model_path}")
 
-        # BOS / EOS token IDs
         self.n_words: int = self.model.n_vocab
+        # BOS / EOS token IDs
         self.bos_id: int = self.special_tokens["<|begin_of_text|>"]
         self.eos_id: int = self.special_tokens["<|end_of_text|>"]
         self.pad_id: int = -1
@@ -130,7 +129,7 @@ class Tokenizer:
         assert type(s) is str
 
         # The tiktoken tokenizer can handle <=400k chars without
-        # pyo3_runtime.PanicException (may go beyond 400k)
+        # pyo3_runtime.PanicException.
         TIKTOKEN_MAX_ENCODE_CHARS = 400_000
 
         # https://github.com/openai/tiktoken/issues/195
@@ -170,7 +169,7 @@ class Tokenizer:
         Returns:
             str: The decoded string.
         """
-        # typecast is safe here, Tiktoken doesn't do anything list-related with the sequence.
+        # Typecast is safe here. Tiktoken doesn't do anything list-related with the sequence.
         return self.model.decode(cast(List[int], t))
 
     @staticmethod
@@ -178,8 +177,8 @@ class Tokenizer:
         s: str, max_consecutive_slice_len: int
     ) -> Iterator[str]:
         """
-        Split the string `s` so that each substring contains no more than `max_consecutive_slice_len`
-        consecutive whitespaces or consecutive non-whitespaces
+        Splits the string `s` so that each substring contains no more than `max_consecutive_slice_len`
+        consecutive whitespaces or consecutive non-whitespaces.
         """
         current_slice_len = 0
         current_slice_is_space = s[0].isspace() if len(s) > 0 else False
@@ -225,6 +224,6 @@ class ChatFormat:
         tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
         for message in dialog:
             tokens.extend(self.encode_message(message))
-        # Add the start of an assistant message for the model to complete
+        # Add the start of an assistant message for the model to complete.
         tokens.extend(self.encode_header({"role": "assistant", "content": ""}))
         return tokens
