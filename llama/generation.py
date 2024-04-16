@@ -10,15 +10,13 @@ from typing import List, Optional, Tuple, TypedDict
 
 import torch
 import torch.nn.functional as F
-from fairscale.nn.model_parallel.initialize import (
-    get_model_parallel_rank,
-    initialize_model_parallel,
-    model_parallel_is_initialized,
-)
+from torchao.quantization import change_linear_weights_to_int4_woqtensors, change_linear_weights_to_int8_dqtensors, change_linear_weights_to_int8_woqtensors
 
 from llama.model import ModelArgs, Transformer
 from llama.tokenizer import Dialog, Message, ChatFormat, Tokenizer
 
+def decode_one_token(model, tokens: torch.Tensor, start_pos: int):
+    return model.forward(tokens, start_pos)
 
 class CompletionPrediction(TypedDict, total=False):
     generation: str
@@ -39,7 +37,9 @@ class Llama:
         tokenizer_path: str,
         max_seq_len: int,
         max_batch_size: int,
-        model_parallel_size: Optional[int] = None,
+        model_name: str="model.pth",
+        quantization_mode: Optional[str] = None,
+        torch_compile: bool=False,
         seed: int = 1,
     ) -> "Llama":
         """
@@ -65,29 +65,14 @@ class Llama:
             and loads the pre-trained model and tokenizer.
 
         """
-        if not torch.distributed.is_initialized():
-            torch.distributed.init_process_group("nccl")
-        if not model_parallel_is_initialized():
-            if model_parallel_size is None:
-                model_parallel_size = int(os.environ.get("WORLD_SIZE", 1))
-            initialize_model_parallel(model_parallel_size)
-
-        local_rank = int(os.environ.get("LOCAL_RANK", 0))
-        torch.cuda.set_device(local_rank)
 
         # seed must be the same in all processes
         torch.manual_seed(seed)
 
-        if local_rank > 0:
-            sys.stdout = open(os.devnull, "w")
 
         start_time = time.time()
-        checkpoints = sorted(Path(ckpt_dir).glob("*.pth"))
-        assert len(checkpoints) > 0, f"no checkpoint files found in {ckpt_dir}"
-        assert model_parallel_size == len(
-            checkpoints
-        ), f"Loading a checkpoint for MP={len(checkpoints)} but world size is {model_parallel_size}"
-        ckpt_path = checkpoints[get_model_parallel_rank()]
+        ckpt_path = Path(ckpt_dir + "/" + model_name)
+        assert ckpt_path.exists(), f"{ckpt_dir + '/' + model_name} does not exist"
         checkpoint = torch.load(ckpt_path, map_location="cpu")
         with open(Path(ckpt_dir) / "params.json", "r") as f:
             params = json.loads(f.read())
@@ -99,9 +84,42 @@ class Llama:
         )
         tokenizer = Tokenizer(model_path=tokenizer_path)
         assert model_args.vocab_size == tokenizer.n_words
-        torch.set_default_tensor_type(torch.cuda.HalfTensor)
+        torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
         model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=False)
+
+        if quantization_mode == "int4wo":
+            change_linear_weights_to_int4_woqtensors(model)
+        if quantization_mode == "int8wo":
+            change_linear_weights_to_int8_woqtensors(model)
+        if quantization_mode == "int8dyn":
+            change_linear_weights_to_int8_dqtensors(model)
+            # if quantization_mode == "autoquant":
+            #     autoquant(model)
+        #         assert False, "not working yet"
+
+        # baseline
+        # total time: 26.30s, tokens: 483, tok/s: 18.37, peak_memory: 4.28GB
+
+        # int4
+        # total time: 23.58s, tokens: 483, tok/s: 20.48, peak_memory: 4.28GB
+
+        # change_linear_weights_to_int4_woqtensors(model)
+
+        # int8 dynamic
+        # total time: 24.30s, tokens: 483, tok/s: 19.88, peak_memory: 4.28GB
+        # from torchao.quantization import change_linear_weights_to_int8_dqtensors
+        # change_linear_weights_to_int8_dqtensors(model)
+
+        # int8 weight only
+        # total time: 25.33s, tokens: 483, tok/s: 19.07, peak_memory: 4.28GB
+        # from torchao.quantization import change_linear_weights_to_int8_woqtensors
+        # change_linear_weights_to_int8_woqtensors(model)
+
+        global decode_one_token
+        if torch_compile:
+            decode_one_token = torch.compile(decode_one_token, mode="max-autotune")
+
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
         return Llama(model, tokenizer)
@@ -169,9 +187,13 @@ class Llama:
             )
 
         stop_tokens = torch.tensor(list(self.tokenizer.stop_tokens))
-
+        global decode_one_token
         for cur_pos in range(min_prompt_len, total_len):
-            logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+            if cur_pos == min_prompt_len:
+                logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+            else:
+                logits = decode_one_token(self.model, tokens[:, prev_pos:cur_pos], prev_pos)
+
             if temperature > 0:
                 probs = torch.softmax(logits[:, -1] / temperature, dim=-1)
                 next_token = sample_top_p(probs, top_p)
@@ -310,13 +332,26 @@ class Llama:
             self.formatter.encode_dialog_prompt(dialog)
             for dialog in dialogs
         ]
-        generation_tokens, generation_logprobs = self.generate(
-            prompt_tokens=prompt_tokens,
-            max_gen_len=max_gen_len,
-            temperature=temperature,
-            top_p=top_p,
-            logprobs=logprobs,
-        )
+
+        batch = self.model.params.max_batch_size
+        num_prompts = len(prompt_tokens)
+        generation_tokens = []
+        generation_logprobs = []
+        for start in range(0, num_prompts, batch):
+            end = min(start + batch, num_prompts)
+            batch_tokens = prompt_tokens[start:end]
+            with torch.no_grad():
+                cur_tokens, cur_logprobs = self.generate(
+                    prompt_tokens=batch_tokens,
+                    max_gen_len=max_gen_len,
+                    temperature=temperature,
+                    top_p=top_p,
+                    logprobs=logprobs,
+                )
+            generation_tokens = generation_tokens + cur_tokens
+            generation_logprobs = generation_logprobs + cur_logprobs
+
+
         if logprobs:
             return [
                 {
