@@ -44,7 +44,7 @@ class Tokenizer:
 
     num_reserved_special_tokens = 256
 
-    pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"  # noqa: E501
+    pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"  # noqa: E501
 
     def __init__(self, model_path: str):
         """
@@ -60,18 +60,20 @@ class Tokenizer:
         special_tokens = [
             "<|begin_of_text|>",
             "<|end_of_text|>",
-            "<|reserved_special_token_0|>",
-            "<|reserved_special_token_1|>",
-            "<|reserved_special_token_2|>",
-            "<|reserved_special_token_3|>",
+            "<|fim_prefix|>",
+            "<|fim_middle|>",
+            "<|fim_suffix|>",
             "<|start_header_id|>",
             "<|end_header_id|>",
-            "<|reserved_special_token_4|>",
-            "<|eot_id|>",  # end of turn
-        ] + [
-            f"<|reserved_special_token_{i}|>"
-            for i in range(5, self.num_reserved_special_tokens - 5)
+            "<|step_id|>",
+            "<|eom_id|>",
+            "<|eot_id|>",
+            "<|python_tag|>",  # end of turn
         ]
+        special_tokens = special_tokens[:-1] + [
+            f"<|reserved_special_token_{i}|>"
+            for i in range(self.num_reserved_special_tokens - 11)
+        ] + [special_tokens[-1]]
         self.special_tokens = {
             token: num_base_tokens + i for i, token in enumerate(special_tokens)
         }
