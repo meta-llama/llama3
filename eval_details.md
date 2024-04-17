@@ -1,6 +1,6 @@
 ### Llama 3 Evaluation Details
-This document contains additional context on the settings and parameters for how we evaluated the Llama 3 8B and 70B pre-trained and instruct-aligned models.
-
+This document contains additional context on the settings and parameters for how we evaluated the Llama 3 pre-trained and instruct-aligned models.
+### Auto-eval benchmark notes
 #### MMLU
 - We are reporting macro averages for MMLU benchmarks. The micro average numbers for MMLU are: 65.4 and 67.4 for the 8B pre-trained and instruct-aligned models, 78.9 and 82.0 for the 70B pre-trained and instruct-aligned models
 - For the instruct-aligned MMLU we ask the model to generate the best choice character
@@ -32,3 +32,19 @@ This document contains additional context on the settings and parameters for how
 - We use the same 8-shot chain-of-thought prompt as in Wei et al. (2022) (maj@1).
 #### MATH
 - We use the 4-shot problem available in Lewkowycz et al. (2022) (maj@1).
+### Human evaluation notes
+This evaluation set contains 1,800 prompts that cover 12 key use cases: asking for advice, brainstorming, classification, closed question answering, coding, creative writing, extraction, inhabiting a character/persona, open question answering, reasoning, rewriting, and summarization.
+|Capability|Category|Count|
+|----------|--------|-----|
+|Coding|Coding|150|
+|Reasoning|Mathematical reasoning|150|
+|English|Asking for Advice|150|
+|English|Brainstorming|150|
+|English|Classification|150|
+|English|Closed Question Answering|150|
+|English|Creative Writing|150|
+|English|Extraction|150|
+|English|Inhabiting a Character/Persona|150|
+|English|Open Question Answering|150|
+|English|Rewriting|150|
+|English|Summarization|150|
