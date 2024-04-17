@@ -1,3 +1,14 @@
+<p align="center">
+  <img src="https://github.com/meta-llama/llama/blob/main/Llama3_Repo.jpeg" width="400"/>
+</p>
+
+<p align="center">
+        🤗 <a href="https://huggingface.co/meta-Llama"> Models on Hugging Face</a>&nbsp | <a href="https://ai.meta.com/blog/"> Blog</a>&nbsp |  <a href="https://llama.meta.com/">Website</a>&nbsp
+<br>
+
+---
+
+
 # Meta Llama 3
 
 We are unlocking the power of large language models. Our latest version of Llama is now accessible to individuals, creators, researchers, and businesses of all sizes so that they can experiment, innovate, and scale their ideas responsibly.
