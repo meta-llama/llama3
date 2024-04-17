@@ -1,5 +1,5 @@
 ### Llama 3 Evaluation Details
-This document contains additional context on the settings and methodology for how we evaluated the Llama 3 8 and 70B Pre-trained and Instruct-aligned models.
+This document contains additional context on the settings and parameters for how we evaluated the Llama 3 8B and 70B pre-trained and instruct-aligned models.
 
 #### MMLU
 - We are reporting macro averages for MMLU benchmarks. The micro average numbers for MMLU are: 65.4 and 67.4 for the 8B pre-trained and instruct-aligned models, 78.9 and 82.0 for the 70B pre-trained and instruct-aligned models
