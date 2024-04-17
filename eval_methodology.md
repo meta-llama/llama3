@@ -2,7 +2,7 @@
 This document contains additional context on the settings and methodology for how we evaluated the Llama 3 8 and 70B Pre-trained and Instruct-aligned models.
 
 #### MMLU
-- We are reporting macro averages for MMLU benchmarks. The micro average numbers for MMLU are: 65.4 and 67.4 for the 7B pre-trained and instruct-aligned models, 78.9 and 82.0 for the 70B pre-trained and instruct-aligned models
+- We are reporting macro averages for MMLU benchmarks. The micro average numbers for MMLU are: 65.4 and 67.4 for the 8B pre-trained and instruct-aligned models, 78.9 and 82.0 for the 70B pre-trained and instruct-aligned models
 - For the instruct-aligned MMLU we ask the model to generate the best choice character
 #### AGI English
 - We use the default few-shot and prompt settings as specified here. The score is averaged over the english subtasks.
