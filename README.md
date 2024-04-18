@@ -36,7 +36,7 @@ We are also providing downloads on [Hugging Face](https://huggingface.co/meta-ll
 - To download the original native weights to use with this repo, click on the "Files and versions" tab and download the contents of the `original` folder. You can also download them from the command line if you `pip install hugginface-hub`:
 
 ```bash
-huggingface-cli download --local-dir llama-3-8b-instruct meta-llama/Llama-3-8b-instruct
+huggingface-cli download --local-dir llama-3-8b-instruct meta-llama/Meta-Llama-3-8B-Instruct
 ```
 
 - To use with transformers, the following [pipeline](https://huggingface.co/docs/transformers/en/main_classes/pipelines) snippet will download and cache the weights:
