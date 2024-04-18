@@ -45,7 +45,7 @@ huggingface-cli download --local-dir llama-3-8b-instruct meta-llama/Llama-3-8b-i
   import transformers
   import torch
 
-  model_id = "meta-llama/Llama-3-8b-instruct"
+  model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
 
   pipeline = transformers.pipeline(
     "text-generation",
