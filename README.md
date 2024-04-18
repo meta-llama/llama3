@@ -33,7 +33,12 @@ We are also providing downloads on [Hugging Face](https://huggingface.co/meta-ll
 
 - Visit one of the repos, for example [meta-llama/Llama-3-8b-instruct](https://huggingface.co/meta-llama/Llama-3-8b-instruct).
 - Read and accept the license. Once your request is approved, you'll be granted access to all the Llama 3 models. Note that requests use to take up to one hour to get processed.
-- To download the original native weights to use with this repo, click on the "Files and versions" tab and download the contents of the `original` folder.
+- To download the original native weights to use with this repo, click on the "Files and versions" tab and download the contents of the `original` folder. You can also download them from the command line if you `pip install hugginface-hub`:
+
+```bash
+huggingface-cli download --local-dir llama-3-8b-instruct meta-llama/Llama-3-8b-instruct
+```
+
 - To use with transformers, the following [pipeline](https://huggingface.co/docs/transformers/en/main_classes/pipelines) snippet will download and cache the weights:
 
   ```python
