@@ -5,9 +5,9 @@ This document contains additional context on the settings and parameters for how
 - We are reporting macro averages for MMLU benchmarks. The micro average numbers for MMLU are: 65.4 and 67.4 for the 8B pre-trained and instruct-aligned models, 78.9 and 82.0 for the 70B pre-trained and instruct-aligned models
 - For the instruct-aligned MMLU we ask the model to generate the best choice character
 #### AGI English
-- We use the default few-shot and prompt settings as specified here. The score is averaged over the english subtasks.
+- We use the default few-shot and prompt settings as specified [here](https://github.com/ruixiangcui/AGIEval). The score is averaged over the english subtasks.
 #### CommonSenseQA
-- We use the same 7-shot chain-of-thought prompt as in Wei et al. (2022).
+- We use the same 7-shot chain-of-thought prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf).
 #### Winogrande
 - We use a choice based setup for evaluation where we fill in the missing blank with the two possible choices and then compute log-likelihood over the suffix. We use 5 shots for evaluation.
 #### BIG-Bench Hard
@@ -29,9 +29,9 @@ This document contains additional context on the settings and parameters for how
 #### HumanEval
 - Same setting as Llama 1 and Llama 2 (pass@1).
 #### GSM8K
-- We use the same 8-shot chain-of-thought prompt as in Wei et al. (2022) (maj@1).
+- We use the same 8-shot chain-of-thought prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf) (maj@1).
 #### MATH
-- We use the 4-shot problem available in Lewkowycz et al. (2022) (maj@1).
+- We use the 4-shot problem available in [Lewkowycz et al. (2022)](https://arxiv.org/pdf/2206.14858.pdf) (maj@1).
 ### Human evaluation notes
 This evaluation set contains 1,800 prompts that cover 12 key use cases: asking for advice, brainstorming, classification, closed question answering, coding, creative writing, extraction, inhabiting a character/persona, open question answering, reasoning, rewriting, and summarization.
 |Category|Count|
