@@ -61,18 +61,30 @@ class Llama:
                 or if the model parallel size does not match the number of checkpoint files.
 
         Note:
-            This method initializes the distributed process group, sets the device to CUDA,
+            This method initializes the distributed process group, sets the device based on availability,
             and loads the pre-trained model and tokenizer.
         """
         if not torch.distributed.is_initialized():
-            torch.distributed.init_process_group("nccl")
+            if torch.backends.mps.is_available():
+                torch.distributed.init_process_group("gloo")
+            else:
+                torch.distributed.init_process_group("nccl")
+
         if not model_parallel_is_initialized():
             if model_parallel_size is None:
                 model_parallel_size = int(os.environ.get("WORLD_SIZE", 1))
             initialize_model_parallel(model_parallel_size)
 
-        local_rank = int(os.environ.get("LOCAL_RANK", 0))
-        torch.cuda.set_device(local_rank)
+        if torch.backends.mps.is_available():
+            device = torch.device("mps")
+            local_rank = 0
+        else:
+            local_rank = int(os.environ.get("LOCAL_RANK", 0))
+            if torch.cuda.is_available():
+                torch.cuda.set_device(local_rank)
+                device = torch.device("cuda")
+            else:
+                device = torch.device("cpu")
 
         # seed must be the same in all processes
         torch.manual_seed(seed)
@@ -98,12 +110,18 @@ class Llama:
         )
         tokenizer = Tokenizer(model_path=tokenizer_path)
         assert model_args.vocab_size == tokenizer.n_words
-        if torch.cuda.is_bf16_supported():
+
+        if torch.backends.mps.is_available():
+            torch.set_default_tensor_type(torch.FloatTensor)
+        elif torch.cuda.is_available() and torch.cuda.is_bf16_supported():
             torch.set_default_tensor_type(torch.cuda.BFloat16Tensor)
         else:
-            torch.set_default_tensor_type(torch.cuda.HalfTensor)
+            torch.set_default_tensor_type(torch.FloatTensor)
+
         model = Transformer(model_args)
         model.load_state_dict(checkpoint, strict=False)
+        model.to(device)
+
         print(f"Loaded in {time.time() - start_time:.2f} seconds")
 
         return Llama(model, tokenizer)
@@ -140,7 +158,6 @@ class Llama:
         Note:
             This method uses the provided prompts as a basis for generating text. It employs nucleus sampling to produce text with controlled randomness.
             If logprobs is True, token log probabilities are computed for each generated token.
-
         """
         params = self.model.params
         bsz = len(prompt_tokens)
@@ -152,14 +169,15 @@ class Llama:
         total_len = min(params.max_seq_len, max_gen_len + max_prompt_len)
 
         pad_id = self.tokenizer.pad_id
-        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device="cuda")
+        device = next(self.model.parameters()).device
+        tokens = torch.full((bsz, total_len), pad_id, dtype=torch.long, device=device)
         for k, t in enumerate(prompt_tokens):
-            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
+            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device=device)
         if logprobs:
-            token_logprobs = torch.zeros_like(tokens, dtype=torch.float)
+            token_logprobs = torch.zeros_like(tokens, dtype=torch.float, device=device)
 
         prev_pos = 0
-        eos_reached = torch.tensor([False] * bsz, device="cuda")
+        eos_reached = torch.tensor([False] * bsz, device=device)
         input_text_mask = tokens != pad_id
         if min_prompt_len == total_len:
             logits = self.model.forward(tokens, prev_pos)
@@ -170,7 +188,7 @@ class Llama:
                 ignore_index=pad_id,
             )
 
-        stop_tokens = torch.tensor(list(self.tokenizer.stop_tokens))
+        stop_tokens = torch.tensor(list(self.tokenizer.stop_tokens), device=device)
 
         for cur_pos in range(min_prompt_len, total_len):
             logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
@@ -249,7 +267,6 @@ class Llama:
         Note:
             This method generates text completions for the provided prompts, employing nucleus sampling to introduce controlled randomness.
             If logprobs is True, token log probabilities are computed for each generated token.
-
         """
         if max_gen_len is None:
             max_gen_len = self.model.params.max_seq_len - 1

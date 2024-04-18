@@ -170,7 +170,7 @@ class Tokenizer:
             str: The decoded string.
         """
         # Typecast is safe here. Tiktoken doesn't do anything list-related with the sequence.
-        return self.model.decode(cast(List[int], t))
+        return self.model.decode(list(filter(lambda tk: tk != -1, t)))
 
     @staticmethod
     def _split_whitespaces_or_nonwhitespaces(
