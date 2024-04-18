@@ -498,17 +498,14 @@ Please see the Responsible Use Guide available at [http://llama.meta.com/respons
 
 ## Citation instructions
 
+```
 @article{llama3modelcard,
-
   title={Llama 3 Model Card},
-
   author={AI@Meta},
-
   year={2024},
-
   url = {https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md}
-
 }
+```
 
 ## Contributors
 
