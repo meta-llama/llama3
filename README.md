@@ -77,12 +77,12 @@ You can follow the steps below to quickly get up and running with Llama 3 models
 6. Once the model/s you want have been downloaded, you can run the model locally using the command below:
 ```bash
 torchrun --nproc_per_node 1 example_chat_completion.py \
-    --ckpt_dir 8b_instruction_tuned/ \
-    --tokenizer_path tokenizer.model \
+    --ckpt_dir Meta-Llama-3-8B-Instruct/ \
+    --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
     --max_seq_len 512 --max_batch_size 6
 ```
 **Note**
-- Replace  `8b_instruction_tuned/` with the path to your checkpoint directory and `tokenizer.model` with the path to your tokenizer model.
+- Replace  `Meta-Llama-3-8B-Instruct/` with the path to your checkpoint directory and `Meta-Llama-3-8B-Instruct/tokenizer.model` with the path to your tokenizer model.
 - The `–nproc_per_node` should be set to the [MP](#inference) value for the model you are using.
 - Adjust the `max_seq_len` and `max_batch_size` parameters as needed.
 - This example runs the [example_chat_completion.py](example_chat_completion.py) found in this repository but you can change that to a different .py file.
@@ -106,8 +106,8 @@ See `example_text_completion.py` for some examples. To illustrate, see the comma
 
 ```
 torchrun --nproc_per_node 1 example_text_completion.py \
-    --ckpt_dir 8b_pre_trained/ \
-    --tokenizer_path tokenizer.model \
+    --ckpt_dir Meta-Llama-3-8B-Instruct/ \
+    --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
     --max_seq_len 128 --max_batch_size 4
 ```
 
@@ -122,8 +122,8 @@ Examples using llama-3-8b-chat:
 
 ```
 torchrun --nproc_per_node 1 example_chat_completion.py \
-    --ckpt_dir 8b_instruction_tuned/ \
-    --tokenizer_path tokenizer.model \
+    --ckpt_dir Meta-Llama-3-8B-Instruct/ \
+    --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
     --max_seq_len 512 --max_batch_size 6
 ```
 
