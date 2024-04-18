@@ -34,17 +34,17 @@ This document contains additional context on the settings and parameters for how
 - We use the 4-shot problem available in Lewkowycz et al. (2022) (maj@1).
 ### Human evaluation notes
 This evaluation set contains 1,800 prompts that cover 12 key use cases: asking for advice, brainstorming, classification, closed question answering, coding, creative writing, extraction, inhabiting a character/persona, open question answering, reasoning, rewriting, and summarization.
-|Capability|Category|Count|
-|----------|--------|-----|
-|Coding|Coding|150|
-|Reasoning|Mathematical reasoning|150|
-|English|Asking for Advice|150|
-|English|Brainstorming|150|
-|English|Classification|150|
-|English|Closed Question Answering|150|
-|English|Creative Writing|150|
-|English|Extraction|150|
-|English|Inhabiting a Character/Persona|150|
-|English|Open Question Answering|150|
-|English|Rewriting|150|
-|English|Summarization|150|
+|Category|Count|
+|--------|-----|
+|Coding|150|
+|Mathematical reasoning|150|
+|Asking for Advice|150|
+|Brainstorming|150|
+|Classification|150|
+|Closed Question Answering|150|
+|Creative Writing|150|
+|Extraction|150|
+|Inhabiting a Character/Persona|150|
+|Open Question Answering|150|
+|Rewriting|150|
+|Summarization|150|
