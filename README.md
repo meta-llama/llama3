@@ -1,3 +1,14 @@
+<p align="center">
+  <img src="https://github.com/meta-llama/llama3/blob/main/Llama3_Repo.jpeg" width="400"/>
+</p>
+
+<p align="center">
+        🤗 <a href="https://huggingface.co/meta-Llama"> Models on Hugging Face</a>&nbsp | <a href="https://ai.meta.com/blog/"> Blog</a>&nbsp |  <a href="https://llama.meta.com/">Website</a>&nbsp | <a href="https://llama.meta.com/get-started/">Get Started</a>&nbsp
+<br>
+
+---
+
+
 # Meta Llama 3
 
 We are unlocking the power of large language models. Our latest version of Llama is now accessible to individuals, creators, researchers, and businesses of all sizes so that they can experiment, innovate, and scale their ideas responsibly.
@@ -43,11 +54,11 @@ You can follow the steps below to quickly get up and running with Llama 3 models
 ```bash
 torchrun --nproc_per_node 1 example_chat_completion.py \
     --ckpt_dir Meta-Llama-3-8B-Instruct/ \
-    --tokenizer_path tokenizer.model \
+    --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
     --max_seq_len 512 --max_batch_size 6
 ```
 **Note**
-- Replace  `Meta-Llama-3-8B-Instruct/` with the path to your checkpoint directory and `tokenizer.model` with the path to your tokenizer model.
+- Replace  `Meta-Llama-3-8B-Instruct/` with the path to your checkpoint directory and `Meta-Llama-3-8B-Instruct/tokenizer.model` with the path to your tokenizer model.
 - The `–nproc_per_node` should be set to the [MP](#inference) value for the model you are using.
 - Adjust the `max_seq_len` and `max_batch_size` parameters as needed.
 - This example runs the [example_chat_completion.py](example_chat_completion.py) found in this repository but you can change that to a different .py file.
@@ -72,7 +83,7 @@ See `example_text_completion.py` for some examples. To illustrate, see the comma
 ```
 torchrun --nproc_per_node 1 example_text_completion.py \
     --ckpt_dir Meta-Llama-3-8B-Instruct/ \
-    --tokenizer_path tokenizer.model \
+    --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
     --max_seq_len 128 --max_batch_size 4
 ```
 
@@ -88,7 +99,7 @@ Examples using llama-3-8b-chat:
 ```
 torchrun --nproc_per_node 1 example_chat_completion.py \
     --ckpt_dir Meta-Llama-3-8B-Instruct/ \
-    --tokenizer_path tokenizer.model \
+    --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
     --max_seq_len 512 --max_batch_size 6
 ```
 
