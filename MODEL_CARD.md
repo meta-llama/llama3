@@ -143,7 +143,7 @@ Where to send questions or comments about the model Instructions on how to provi
 
 ## Benchmarks 
 
-In this section, we report the results for Llama 3 models on standard automatic benchmarks. For all the evaluations, we use our internal evaluations library. For details on the methodology see [here](https://github.com/meta-llama/llama3/blob/main/eval_methodology.md).
+In this section, we report the results for Llama 3 models on standard automatic benchmarks. For all the evaluations, we use our internal evaluations library. For details on the methodology see [here](https://github.com/meta-llama/llama3/blob/main/eval_details.md).
 
 
 ### Base pretrained models
