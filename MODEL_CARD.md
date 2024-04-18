@@ -466,7 +466,7 @@ We have conducted a two fold assessment of the safety of the model in this area:
 
 
 
-* Testing against a benchmark combining CBRNE and adversarial intent, as well as fine tuning the model to help ensure it refuses to provide detailed information to promote potential CBRNE harm.
+* Iterative testing during model training to assess the safety of responses related to CBRNE threats and other adversarial risks.
 * Involving external CBRNE experts to conduct an uplift test assessing the ability of the model to accurately provide expert knowledge and reduce barriers to potential CBRNE misuse, by reference to what can be achieved using web search (without the model).
 
 
