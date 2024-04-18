@@ -29,7 +29,26 @@ Keep in mind that the links expire after 24 hours and a certain amount of downlo
 
 ### Access to Hugging Face
 
-We are also providing downloads on [Hugging Face](https://huggingface.co/meta-llama).
+We are also providing downloads on [Hugging Face](https://huggingface.co/meta-llama), in both transformers and native `llama3` formats. To download the weights from Hugging Face, please follow these steps:
+
+- Visit one of the repos, for example [meta-llama/Llama-3-8b-instruct](https://huggingface.co/meta-llama/Llama-3-8b-instruct).
+- Read and accept the license. Once your request is approved, you'll be granted access to all the Llama 3 models.
+- To download the original native weights to use with this repo, click on the "Files and versions" tab and download the contents of the `original` folder.
+- To use with transformers, the following [pipeline](https://huggingface.co/docs/transformers/en/main_classes/pipelines) snippet will download and cache the weights:
+
+  ```python
+  import transformers
+  import torch
+
+  model_id = "meta-llama/Llama-3-8b-instruct"
+
+  pipeline = transformers.pipeline(
+    "text-generation",
+    model="meta-llama/Llama-3-8b-instruct",
+    model_kwargs={"torch_dtype": torch.bfloat16},
+    device="cuda",
+  )
+  ```
 
 ## Quick Start
 
