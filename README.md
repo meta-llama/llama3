@@ -85,7 +85,7 @@ torchrun --nproc_per_node 1 example_chat_completion.py \
 - Replace  `Meta-Llama-3-8B-Instruct/` with the path to your checkpoint directory and `Meta-Llama-3-8B-Instruct/tokenizer.model` with the path to your tokenizer model.
 - The `–nproc_per_node` should be set to the [MP](#inference) value for the model you are using.
 - Adjust the `max_seq_len` and `max_batch_size` parameters as needed.
-- This example runs the [example_chat_completion.py](example_chat_completion.py) found in this repository but you can change that to a different .py file.
+- This example runs the [example_chat_completion.py](example_chat_completion.py) found in this repository but you can change that to a different.py file.
 
 ## Inference
 
