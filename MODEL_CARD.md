@@ -74,9 +74,9 @@ Where to send questions or comments about the model Instructions on how to provi
 
 **Intended Use Cases** Llama 3 is intended for commercial and research use in English. Instruction tuned models are intended for assistant-like chat, whereas pretrained models can be adapted for a variety of natural language generation tasks.
 
-**Out-of-scope** Use in any manner that violates applicable laws or regulations (including trade compliance laws). Use in any other way that is prohibited by the Acceptable Use Policy and Llama 3 Community License. Use in languages other than English**.
+**Out-of-scope** Use in any manner that violates applicable laws or regulations (including trade compliance laws). Use in any other way that is prohibited by the [Acceptable Use Policy](https://llama.meta.com/llama3/use-policy/) and [Llama 3 Community License](https://llama.meta.com/llama3/license/). Use in languages other than English**.
 
-**Note: Developers may fine-tune Llama 3 models for languages beyond English provided they comply with the Llama 3 Community License and the Acceptable Use Policy.
+**Note: Developers may fine-tune Llama 3 models for languages beyond English provided they comply with the [Llama 3 Community License](https://llama.meta.com/llama3/license/) and the [Acceptable Use Policy](https://llama.meta.com/llama3/use-policy/).
 
 
 ## Hardware and Software
