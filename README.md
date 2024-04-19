@@ -49,7 +49,7 @@ huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct --include "original
 
   pipeline = transformers.pipeline(
     "text-generation",
-    model="meta-llama/Meta-Llama-3-8B-Instruct",
+    model=model_id,
     model_kwargs={"torch_dtype": torch.bfloat16},
     device="cuda",
   )
