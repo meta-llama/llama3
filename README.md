@@ -57,7 +57,7 @@ huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct --include "original
 
 ## Quick Start
 
-<a target="_blank" href="https://lightning.ai/lightning-ai/studios/chat-with-meta-s-llama-3">
+<a target="_blank" href="https://lightning.ai/lightning-ai/studios/chat-with-llama-3-llm-by-meta-ai">
   <img src="https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com/app-2/studio-badge.svg" alt="Open In Studio"/>
 </a>
 
