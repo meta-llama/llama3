@@ -57,7 +57,11 @@ huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct --include "original
 
 ## Quick Start
 
-You can follow the steps below to quickly get up and running with Llama 3 models. These steps will let you run quick inference locally. For more examples, see the [Llama recipes repository](https://github.com/facebookresearch/llama-recipes).
+<a target="_blank" href="https://lightning.ai/lightning-ai/studios/chat-with-meta-s-llama-3-8b">
+  <img src="https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com/app-2/studio-badge.svg" alt="Open In Studio"/>
+</a>
+
+You can follow the steps below to quickly get up and running with Llama 3 models or use the Lightning AI Studio linked above. These steps will let you run quick inference locally, or self-hosted in the Studio. For more examples, see the [Llama recipes repository](https://github.com/facebookresearch/llama-recipes).
 
 1. In a conda env with PyTorch / CUDA available clone and download this repository.
 
