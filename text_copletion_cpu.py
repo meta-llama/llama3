@@ -24,3 +24,29 @@ generator = Llama.build(
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
     )
+
+prompts: List[str] = [
+        # For these prompts, the expected answer is the natural continuation of the prompt
+        "I believe the meaning of life is",
+        "Simply put, the theory of relativity states that ",
+  
+        # Few shot prompt (providing a few examples before asking model to complete more);
+        """Translate English to Ukrainian:
+
+        sea otter => морська видра
+        peppermint => перцева м‘ята
+        plush girafe => плюшева жирафа
+        cheese => """,
+    ]
+
+results = generator.text_completion(
+        prompts,
+        max_gen_len=max_gen_len,
+        temperature=temperature,
+        top_p=top_p,
+    )
+
+for prompt, result in zip(prompts, results):
+    print(prompt)
+    print(f"> {result['generation']}")
+    print("\n==================================\n")
