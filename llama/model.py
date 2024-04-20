@@ -15,6 +15,13 @@ from fairscale.nn.model_parallel.layers import (
 )
 from torch import nn
 
+if torch.backends.mps.is_available():
+    device = torch.device('mps')
+elif torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
+
 
 @dataclass
 class ModelArgs:
@@ -48,6 +55,7 @@ class RMSNorm(torch.nn.Module):
 
 def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0):
     freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
+    freqs = freqs.to(device)
     t = torch.arange(end, device=freqs.device, dtype=torch.float32)
     freqs = torch.outer(t, freqs)
     freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
@@ -67,12 +75,15 @@ def apply_rotary_emb(
     xk: torch.Tensor,
     freqs_cis: torch.Tensor,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
+    xq = xq.to('cpu')
+    xk = xk.to('cpu')
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
     xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
     xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
     xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(3)
-    return xq_out.type_as(xq), xk_out.type_as(xk)
+    # return xq_out.type_as(xq), xk_out.type_as(xk)
+    return xq_out.type_as(xq).to(device), xk_out.type_as(xk).to(device)
 
 
 def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
@@ -133,7 +144,7 @@ class Attention(nn.Module):
                 self.n_local_kv_heads,
                 self.head_dim,
             )
-        ).cuda()
+        ).to(device)
         self.cache_v = torch.zeros(
             (
                 args.max_batch_size,
@@ -141,7 +152,7 @@ class Attention(nn.Module):
                 self.n_local_kv_heads,
                 self.head_dim,
             )
-        ).cuda()
+        ).to(device)
 
     def forward(
         self,
@@ -283,7 +294,7 @@ class Transformer(nn.Module):
 
         mask = None
         if seqlen > 1:
-            mask = torch.full((seqlen, seqlen), float("-inf"), device=tokens.device)
+            mask = torch.full((seqlen, seqlen), float("-inf"), device=torch.device('cpu'))
 
             mask = torch.triu(mask, diagonal=1)
 
@@ -292,7 +303,7 @@ class Transformer(nn.Module):
             # (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
             # j > cache_len + i, since row i corresponds to token cache_len + i.
             mask = torch.hstack(
-                [torch.zeros((seqlen, start_pos), device=tokens.device), mask]
+                [torch.zeros((seqlen, start_pos), device=torch.device('cpu')), mask]
             ).type_as(h)
 
         for layer in self.layers:
