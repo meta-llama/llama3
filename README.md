@@ -25,6 +25,8 @@ Once your request is approved, you will receive a signed URL over email. Then ru
 
 Pre-requisites: Make sure you have `wget` and `md5sum` installed. Then run the script: `./download.sh`.
 
+If you use Windows, you can get download [gnu wget](https://eternallybored.org/misc/wget/). For macOS, run `brew install wget`.
+
 Keep in mind that the links expire after 24 hours and a certain amount of downloads. If you start seeing errors such as `403: Forbidden`, you can always re-request a link.
 
 ### Access to Hugging Face
