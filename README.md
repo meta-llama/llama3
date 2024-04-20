@@ -102,8 +102,6 @@ All models support sequence length up to 8192 tokens, but we pre-allocate the ca
 Llama 2 fork for running inference on Mac M1/M2 (MPS) devices
 This is a fork of https://github.com/facebookresearch/llama that runs on Apple M2 (MPS - Metal Performance Shaders).
 
-Please refer to the official installation, licences and usage instructions on the facebookresearch/llama page.
-
 Note: user needs to set PYTORCH_ENABLE_MPS_FALLBACK=1 env variable to run this code.
 This is a workaround for unsupported 'aten:polar.out' operator.
 
