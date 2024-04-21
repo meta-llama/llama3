@@ -13,7 +13,7 @@ from fairscale.nn.model_parallel.layers import (
     RowParallelLinear,
     VocabParallelEmbedding,
 )
-from torch import nn
+from pytorch import nn
 
 
 @dataclass
