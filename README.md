@@ -120,7 +120,7 @@ You can also deploy additional classifiers for filtering out inputs and outputs 
 
 Examples using llama-3-8b-chat:
 
-```
+```bash
 torchrun --nproc_per_node 1 example_chat_completion.py \
     --ckpt_dir Meta-Llama-3-8B-Instruct/ \
     --tokenizer_path Meta-Llama-3-8B-Instruct/tokenizer.model \
