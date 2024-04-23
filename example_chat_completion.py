@@ -1,6 +1,8 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
+import os
+
 from typing import List, Optional
 
 import fire
@@ -28,6 +30,10 @@ def main(
 
     `max_gen_len` is optional because finetuned models are able to stop generations naturally.
     """
+    assert 1 <= max_seq_len <= 8192, f"max_seq_len must be between 1 and 8192, got {max_seq_len}."
+    assert os.path.isdir(ckpt_dir), f"Checkpoint directory '{ckpt_dir}' does not exist."
+    assert os.path.isfile(tokenizer_path), f"Tokenizer file '{tokenizer_path}' does not exist."
+    
     generator = Llama.build(
         ckpt_dir=ckpt_dir,
         tokenizer_path=tokenizer_path,
