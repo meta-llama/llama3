@@ -30,6 +30,7 @@ This document contains additional context on the settings and parameters for how
 - Same setting as Llama 1 and Llama 2 (pass@1).
 #### GSM8K
 - We use the same 8-shot chain-of-thought prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf) (maj@1).
+- Max generation length is 512 tokens.
 #### MATH
 - We use the 4-shot problem available in [Lewkowycz et al. (2022)](https://arxiv.org/pdf/2206.14858.pdf) (maj@1).
 ### Human evaluation notes
