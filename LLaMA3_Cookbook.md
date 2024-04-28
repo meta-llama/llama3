@@ -12,6 +12,7 @@ LLaMA3 (Large Language Model by META AI) is a leading-edge large language model 
 - [Access Request 📬](https://llama.meta.com/llama-downloads/)
 - [Meta Llama Model Card 🎴](https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3)
 - [Kaggle Meta 🏅](https://www.kaggle.com/organizations/metaresearch/models)
+- [Meta Github 🐈‍⬛](https://github.com/meta-llama/llama3)
 
 ## ⚡️ Cloud API 
 ### API Calls Available 🔌
@@ -25,6 +26,7 @@ LLaMA3 (Large Language Model by META AI) is a leading-edge large language model 
 | replicate    | Llama3 API support (Node.js, Python, HTTP)                            | [replicate 🌐](https://replicate.com/blog/run-llama-3-with-an-api) |
 | llama AI     | Support for Llama3 8B/70B, supports other OpenLLMs                    | [llama AI 🌐](https://www.llama-api.com/) |
 | aimlapi | Supports various openLLMs as APIs | [AI/ML API](https://aimlapi.com/build-with-llama-3-api)|
+| Nvidia API |Multiple OpenLLM models available Nvidia devloper |[llama AI 🌐](https://build.nvidia.com/explore/discover)
 | Meta AI(github) | Connect to Meta AI api | [MetaAI 🌐](https://github.com/Strvm/meta-ai-api?tab=readme-ov-file)|
 
 
@@ -39,12 +41,18 @@ LLaMA3 (Large Language Model by META AI) is a leading-edge large language model 
 | HuggingFace  | Llama 8B Instruct model                | [Link 🌐](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) |
 | HuggingFace  | Llama 70B Instruct model               | [Link 🌐](https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct) |
 | HuggingFace  | Llama Guard-2-8B(policy model)         | [Link 🌐](https://huggingface.co/meta-llama/Meta-Llama-Guard-2-8B) |
+| HuggingFace  | Llama 3 70B - FP8([friendliAI](https://friendli.ai/))     | [Link 🌐](https://huggingface.co/FriendliAI/Meta-Llama-3-70B-fp8) |
+| HuggingFace  | Llama 3 70B Instruct - FP8([friendliAI](https://friendli.ai/))      | [Link 🌐](https://huggingface.co/FriendliAI/Meta-Llama-3-70B-Instruct-fp8) |
+| HuggingFace  | Llama 3 8B - FP8([friendliAI](https://friendli.ai/))        | [Link 🌐](https://huggingface.co/FriendliAI/Meta-Llama-3-8B-fp8) |
+| HuggingFace  | Llama 3 8B Instruct - FP8([friendliAI](https://friendli.ai/))      | [Link 🌐](https://huggingface.co/FriendliAI/Meta-Llama-3-8B-Instruct-fp8) |
 | HuggingFace | Llama 8B KO (made beomi) | [Link 🌐](https://huggingface.co/beomi/Llama-3-Open-Ko-8B-preview)|
 | Ollama       | Support for various lightweight Llama3 models | [Link 🌐](https://ollama.com/library/llama3) |
 
 ### HuggingFace Models 🐥
 | Name   | Description                               | Link |
 |--------------|----------------------------------------|-----|
+| Trelis/Meta-Llama-3-70B-Instruct-function-calling | function calling | [Link 🌐](https://huggingface.co/Trelis/Meta-Llama-3-70B-Instruct-function-calling) |
+| Trelis/Meta-Llama-3-8B-Instruct-function-calling | function calling | [Link 🌐](https://huggingface.co/Trelis/Meta-Llama-3-8B-Instruct-function-calling) |
 |cognitivecomputations/dolphin-2.9-llama3-8b| Uncensored fine-tuning | [Link 🌐](https://huggingface.co/cognitivecomputations/dolphin-2.9-llama3-8b)|
 |McGill-NLP/Llama-3-8B-Web| Zero-shot internet link selection capability |[Link 🌐](https://huggingface.co/McGill-NLP/Llama-3-8B-Web)
 |teddylee777/Llama-3-Open-Ko-8B-Instruct-preview-gguf|Korean quantizatied GGUF model for ollama use|[Link 🌐](https://huggingface.co/teddylee777/Llama-3-Open-Ko-8B-Instruct-preview-gguf)
@@ -62,6 +70,7 @@ LLaMA3 (Large Language Model by META AI) is a leading-edge large language model 
 |openrouter.ai| [Link 🌐](https://openrouter.ai/playground?models=meta-llama/llama-3-70b-instruct)|
 | MetaAI (Not available in Korea)|[Link 🌐](https://www.meta.ai/)|
 | Morphic(multimodal offerings) | [Link 🌐](https://www.morphic.sh/)|
+| Nvidia AI | [[Link 🌐](https://www.nvidia.com/ko-kr/ai/#referrer=ai-subdomain)|
 
 ## LLaMA Framework  📘
 | Name       |Type| Link 
@@ -93,6 +102,8 @@ LLaMA3 (Large Language Model by META AI) is a leading-edge large language model 
 | RAG Chatbot LLama3(HF) | [Link 🌐](https://huggingface.co/blog/not-lain/rag-chatbot-using-llama3) |
 | llama index RAG llama3 | [Link 🌐](https://lightning.ai/lightning-ai/studios/rag-using-llama-3-by-meta-ai) |
 | ollama RAG + UI(Gradio) | [Link 🌐](https://mer.vin/2024/04/llama-3-rag-using-ollama/) |
+| LangGraph + Llama3 | [Link 🌐](https://github.com/langchain-ai/langgraph/blob/main/examples/rag/langgraph_rag_agent_llama3_local.ipynb)|
+
 
 ## LLM Dataset 🗂️
 | Information                       | Link |
