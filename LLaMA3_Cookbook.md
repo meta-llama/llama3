@@ -58,7 +58,6 @@ LLaMA3 (Large Language Model by META AI) is a leading-edge large language model 
 |teddylee777/Llama-3-Open-Ko-8B-Instruct-preview-gguf|Korean quantizatied GGUF model for ollama use|[Link 🌐](https://huggingface.co/teddylee777/Llama-3-Open-Ko-8B-Instruct-preview-gguf)
 |beomi/Llama-3-Open-Ko-8B-Instruct-preview| Korean model trained with the Chat vector method| [Link 🌐](https://huggingface.co/beomi/Llama-3-Open-Ko-8B-Instruct-preview)|
 
-
 ## 💬 Chat Interface (Related Information) 💻
 | Name              | Link |
 |-----------------|-----|
