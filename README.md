@@ -60,7 +60,10 @@ huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct --include "original
 You can follow the steps below to quickly get up and running with Llama 3 models. These steps will let you run quick inference locally. For more examples, see the [Llama recipes repository](https://github.com/facebookresearch/llama-recipes).
 
 1. In a conda env with PyTorch / CUDA available clone and download this repository.
-
+    ```bash
+    git clone https://github.com/meta-llama/llama3.git
+    cd llama3
+    ```
 2. In the top-level directory run:
     ```bash
     pip install -e .
