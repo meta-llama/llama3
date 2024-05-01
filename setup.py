@@ -2,6 +2,7 @@
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 from setuptools import find_packages, setup
+from llama import __version__ as VERSION
 
 
 def get_requirements(path: str):
@@ -10,7 +11,7 @@ def get_requirements(path: str):
 
 setup(
     name="llama3",
-    version="0.0.1",
+    version=VERSION,
     packages=find_packages(),
     install_requires=get_requirements("requirements.txt"),
 )
