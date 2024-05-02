@@ -6,6 +6,8 @@ import sklearn as sk
 import scipy as sp
 import tensorflow as tf
 import platform
+import os
+import torch.distributed as dist
 
 print(f"Python Platform: {platform.platform()}")
 print(f"Tensor Flow Version: {tf.__version__}")
@@ -17,6 +19,12 @@ print(f"Scikit-Learn {sk.__version__}")
 print(f"SciPy {sp.__version__}")
 gpu = len(tf.config.list_physical_devices('GPU'))>0
 print("GPU is", "available" if gpu else "NOT AVAILABLE")
+
+os.environ['MASTER_ADDR'] = 'localhost'
+os.environ['MASTER_PORT'] = '9000'
+os.environ['RANK'] = '0'
+os.environ['WORLD_SIZE'] = '1'
+dist.init_process_group(backend='gloo', init_method='env://')
 
 # Connected to pydev debugger (build 241.14494.241)
 # Python Platform: macOS-14.4.1-arm64-arm-64bit
