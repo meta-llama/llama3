@@ -133,7 +133,7 @@ class Attention(nn.Module):
                 self.n_local_kv_heads,
                 self.head_dim,
             )
-        ).cuda()
+        )# KJSL_M3_Max .cuda()
         self.cache_v = torch.zeros(
             (
                 args.max_batch_size,
@@ -141,7 +141,7 @@ class Attention(nn.Module):
                 self.n_local_kv_heads,
                 self.head_dim,
             )
-        ).cuda()
+        )#KJSL: M3 Max .cuda()
 
     def forward(
         self,
