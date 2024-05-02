@@ -64,8 +64,16 @@ class Llama:
             This method initializes the distributed process group, sets the device to CUDA,
             and loads the pre-trained model and tokenizer.
         """
+
+        os.environ['MASTER_ADDR'] = 'localhost'
+        os.environ['MASTER_PORT'] = '29500'
+        os.environ['RANK'] = '0'
+        os.environ['WORLD_SIZE'] = '1'
+
         if not torch.distributed.is_initialized():
-            torch.distributed.init_process_group("nccl")
+            # KJSL_M3_Max torch.distributed.init_process_group("nccl")
+            torch.distributed.init_process_group("gloo") # KJSL_M3_Max
+
         if not model_parallel_is_initialized():
             if model_parallel_size is None:
                 model_parallel_size = int(os.environ.get("WORLD_SIZE", 1))

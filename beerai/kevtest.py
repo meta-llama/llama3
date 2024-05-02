@@ -1,3 +1,5 @@
+# torchrun beerai/kevtest.py
+
 import sys
 
 import tensorflow.keras
@@ -20,8 +22,9 @@ print(f"SciPy {sp.__version__}")
 gpu = len(tf.config.list_physical_devices('GPU'))>0
 print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
+# KJSL Start gloo on default master port 29500
 os.environ['MASTER_ADDR'] = 'localhost'
-os.environ['MASTER_PORT'] = '9000'
+os.environ['MASTER_PORT'] = '29500'
 os.environ['RANK'] = '0'
 os.environ['WORLD_SIZE'] = '1'
 dist.init_process_group(backend='gloo', init_method='env://')
