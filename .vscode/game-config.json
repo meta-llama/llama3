@@ -1,0 +1,136 @@
+{
+    "name": "18 Bus Route Adventure",
+    "description": "An adventure game exploring the 18 bus route from Langley to Manchester.",
+    "settings": {
+        "title": "The Bus Game",
+        "startLocation": "Langley",
+        "endLocation": "Manchester",
+        "busRoute": "18",
+        "stops": [
+            {
+                "name": "Langley",
+                "coordinates": {
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            {
+                "name": "Middleton Bus Station",
+                "coordinates": {
+                    "x": 50,
+                    "y": 20
+                }
+            },
+            {
+                "name": "Alkrington",
+                "coordinates": {
+                    "x": 100,
+                    "y": 40
+                }
+            },
+            {
+                "name": "Blackley",
+                "coordinates": {
+                    "x": 150,
+                    "y": 60
+                }
+            },
+            {
+                "name": "Harpurhey",
+                "coordinates": {
+                    "x": 200,
+                    "y": 80
+                }
+            },
+            {
+                "name": "North Manchester General Hospital",
+                "coordinates": {
+                    "x": 250,
+                    "y": 100
+                }
+            },
+            {
+                "name": "Manchester Royal Infirmary",
+                "coordinates": {
+                    "x": 300,
+                    "y": 120
+                }
+            },
+            {
+                "name": "Manchester Piccadilly Gardens",
+                "coordinates": {
+                    "x": 350,
+                    "y": 140
+                }
+            },
+            {
+                "name": "Manchester Arndale",
+                "coordinates": {
+                    "x": 400,
+                    "y": 160
+                }
+            },
+            {
+                "name": "Manchester Victoria Station",
+                "coordinates": {
+                    "x": 450,
+                    "y": 180
+                }
+            }
+        ],
+        "gameWorldSize": {
+            "width": 800,
+            "height": 600
+        },
+        "vehicleTypes": [
+            "bus",
+            "car",
+            "motorcycle",
+            "bicycle"
+        ],
+        "policeBehavior": {
+            "aggressionLevel": 2,
+            "responseTime": 30,
+            "maxWantedLevel": 5
+        },
+        "events": [
+            {
+                "name": "Local market day",
+                "location": "Langley",
+                "description": "Every Saturday, a lively market takes place in the center of Langley, offering fresh produce, handmade crafts, and street food. You can choose to explore the market or continue on your way.",
+                "handler": "handleMarketEvent"
+            },
+            {
+                "name": "Encounter a street performer",
+                "location": "Middleton Bus Station",
+                "description": "A talented juggler is performing tricks on the street corner. You can choose to watch the performance or continue on your way.",
+                "handler": "handleStreetPerformerEvent"
+            },
+            {
+                "name": "Delay due to traffic",
+                "location": "Alkrington",
+                "description": "The bus gets stuck in heavy traffic, causing a significant delay. You can choose to be patient or get off and walk."
+            },
+            {
+                "name": "Missed stop",
+                "location": "Blackley",
+                "description": "You accidentally missed your intended stop. You can choose to get off at the next stop or stay on the bus."
+            },
+            {
+                "name": "Bus breakdown",
+                "location": "Harpurhey",
+                "description": "The bus breaks down, and you need to find an alternative way to continue your journey. You can choose to wait for a replacement bus or find another mode of transportation."
+            }
+        ],
+        "players": [
+            {
+                "name": "Player 1",
+                "avatar": "player1.png",
+                "score": 0,
+                "inventory": []
+            }
+        ],
+        "collectibles": []
+    }
+}
+// game

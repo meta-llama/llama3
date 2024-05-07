@@ -1,0 +1,92 @@
+// Welcome to your new AL extension.
+// Remember that object names and IDs should be unique across all extensions.
+// AL snippets start with t*, like tpageext - give them a try and happy coding!
+
+namespace DefaultPublisher.ALProject1;
+
+using Microsoft.Dynamics.Nav.Types;
+
+pageextension 50100 CustomerListExt extends "Customer List"
+{
+    trigger OnOpenPage();
+    begin
+        // This message is not necessary and can be removed for optimization
+    end;
+}
+table 50100 AdventureGame
+{
+    fields
+    {
+        field(1; Name; Text[50])
+        {
+            Caption = 'Name';
+            DataClassification = CustomerContent;
+        }
+        field(2; Description; Text[250])
+        {
+            Caption = 'Description';
+            DataClassification = CustomerContent;
+        }
+        field(3; Location; Text[50])
+        {
+            Caption = 'Location';
+            DataClassification = CustomerContent;
+        }
+    }
+
+    keys
+    {
+        key(PK; Name)
+        {
+            Clustered = true;
+        }
+    }
+
+    // Add data classification property to the table
+    DataClassification = CustomerContent;
+}
+
+pageextension 50100 AdventureGameListExt extends "Adventure Game List"
+{
+    layout
+    {
+        area(Content)
+        {
+            group(General)
+            {
+                field(Name; AdventureGame.Name)
+                {
+                    ApplicationArea = All;
+                }
+                field(Description; AdventureGame.Description)
+                {
+                    ApplicationArea = All;
+                }
+                field(Location; AdventureGame.Location)
+                {
+                    ApplicationArea = All;
+                }
+            }
+        }
+    }
+}
+
+codeunit 50100 AdventureGameManagement
+{
+    procedure CreateAdventureGame(Name: Text[50]; Description: Text[250]; Location: Text[50])
+    var
+        AdventureGameRec: Record AdventureGame;
+    begin
+        AdventureGameRec.Init();
+        AdventureGameRec.Name := Name;
+        AdventureGameRec.Description := Description;
+        AdventureGameRec.Location := Location;
+        AdventureGameRec.Insert(true);
+    end;
+
+    procedure UpdateAdventureGame(Name: Text[50]; Description: Text[250]; Location: Text[50])
+    var
+        AdventureGameRec: Record AdventureGame;
+    begin
+        if AdventureGameRec.Get(Name) then begin
+            AdventureGameRec.Description := Description;
