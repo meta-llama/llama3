@@ -1,22 +1,7 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		{
-			"label": "build",
-			"command": "dotnet",
-			"type": "shell",
-			"args": [
-				"build",
-				"/property:GenerateFullPaths=true",
-				"consoleLoggerParameters",
-				"consoleLoggerParameters=nosummary"
-			],
-			"group": "build",
-			"presentation": {
-				"reveal": "silent"
-			},
-			"problemMatcher": "$msCompile"
-		},
+		,
 		{
 			"type": "docker-build",
 			"label": "docker-build",
