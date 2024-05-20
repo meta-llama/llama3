@@ -16,8 +16,10 @@ if [[ $MODEL_SIZE == "" ]]; then
 fi
 
 echo "Downloading LICENSE and Acceptable Usage Policy"
-wget --continue ${PRESIGNED_URL/'*'/"LICENSE"} -O ${TARGET_FOLDER}"/LICENSE"
-wget --continue ${PRESIGNED_URL/'*'/"USE_POLICY"} -O ${TARGET_FOLDER}"/USE_POLICY"
+wget --continue ${PRESIGNED_URL/'*'/"LICENSE"} -O ${TARGET_FOLDER}"/LICENSE.txt" ||\
+	curl -H "User-Agent: wget/1.36.1" -C - ${PRESIGNED_URL/'*'/"LICENSE"} -o ${TARGET_FOLDER}"/LICENSE.txt"
+wget --continue ${PRESIGNED_URL/'*'/"USE_POLICY"} -O ${TARGET_FOLDER}"/USE_POLICY.txt" ||\
+	curl -H "User-Agent: wget/1.36.1" -C - ${PRESIGNED_URL/'*'/"USE_POLICY"} -o ${TARGET_FOLDER}"/USE_POLICY.txt"
 
 for m in ${MODEL_SIZE//,/ }
 do
@@ -42,14 +44,19 @@ do
     echo "Downloading ${MODEL_PATH}"
     mkdir -p ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}"
 
-    for s in $(seq -f "0%g" 0 ${SHARD})
+	for s in $(seq -w 0 ${SHARD})
     do
-        wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/consolidated.${s}.pth"
+        wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.0${s}.pth"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/consolidated.0${s}.pth" ||\
+			curl -H "User-Agent: wget/1.36.1" -C - ${PRESIGNED_URL/'*'/"${MODEL_PATH}/consolidated.0${s}.pth"} -o ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/consolidated.0${s}.pth"
     done
 
-    wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/params.json"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/params.json"
-    wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/tokenizer.model"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/tokenizer.model"
-    wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/checklist.chk"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/checklist.chk"
+    wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/params.json"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/params.json" ||\
+		curl -H "User-Agent: wget/1.36.1" -C - ${PRESIGNED_URL/'*'/"${MODEL_PATH}/params.json"} -o ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/params.json"
+    wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/tokenizer.model"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/tokenizer.model" ||\
+		curl -H "User-Agent: wget/1.36.1" -C - ${PRESIGNED_URL/'*'/"${MODEL_PATH}/tokenizer.model"} -o ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/tokenizer.model"
+    wget --continue ${PRESIGNED_URL/'*'/"${MODEL_PATH}/checklist.chk"} -O ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/checklist.chk" ||\
+		curl -H "User-Agent: wget/1.36.1" -C - ${PRESIGNED_URL/'*'/"${MODEL_PATH}/checklist.chk"} -o ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}/checklist.chk"
+
     echo "Checking checksums"
     CPU_ARCH=$(uname -m)
     if [[ "$CPU_ARCH" == "arm64" ]]; then
