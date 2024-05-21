@@ -46,7 +46,7 @@ class TokenizerTests(TestCase):
             [
                 128006,  # <|start_header_id|>
                 882,  # "user"
-                128007,  # <|end_of_header|>
+                128007,  # <|end_header_id|>
                 271,  # "\n\n"
                 2028, 374, 264, 1296, 11914, 13,  # This is a test sentence.
                 128009,  # <|eot_id|>
@@ -70,19 +70,19 @@ class TokenizerTests(TestCase):
                 128000,  # <|begin_of_text|>
                 128006,  # <|start_header_id|>
                 9125,     # "system"
-                128007,  # <|end_of_header|>
+                128007,  # <|end_header_id|>
                 271,     # "\n\n"
                 2028, 374, 264, 1296, 11914, 13,  # "This is a test sentence."
                 128009,  # <|eot_id|>
                 128006,  # <|start_header_id|>
                 882,     # "user"
-                128007,  # <|end_of_header|>
+                128007,  # <|end_header_id|>
                 271,     # "\n\n"
                 2028, 374, 264, 2077, 13,  # "This is a response.",
                 128009,  # <|eot_id|>
                 128006,  # <|start_header_id|>
                 78191,   # "assistant"
-                128007,  # <|end_of_header|>
+                128007,  # <|end_header_id|>
                 271,     # "\n\n"
             ]
         )
