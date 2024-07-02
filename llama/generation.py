@@ -1,15 +1,12 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
-
-import json
 import os
 import sys
+import json
 import time
-from pathlib import Path
-from typing import List, Optional, Tuple, TypedDict
-
 import torch
 import torch.nn.functional as F
+
+from pathlib import Path
+from typing import List, Optional, Tuple, TypedDict, Union
 from fairscale.nn.model_parallel.initialize import (
     get_model_parallel_rank,
     initialize_model_parallel,
@@ -17,6 +14,8 @@ from fairscale.nn.model_parallel.initialize import (
 )
 
 from llama.model import ModelArgs, Transformer
+# from llama.model_text_embedding import ModelArgs, Transformer
+
 from llama.tokenizer import ChatFormat, Dialog, Message, Tokenizer
 
 
@@ -33,6 +32,11 @@ class ChatPrediction(TypedDict, total=False):
 
 
 class Llama:
+    def __init__(self, model: Transformer, tokenizer: Tokenizer):
+        self.model = model
+        self.tokenizer = tokenizer
+        self.formatter = ChatFormat(tokenizer)
+
     @staticmethod
     def build(
         ckpt_dir: str,
@@ -112,10 +116,7 @@ class Llama:
 
         return Llama(model, tokenizer)
 
-    def __init__(self, model: Transformer, tokenizer: Tokenizer):
-        self.model = model
-        self.tokenizer = tokenizer
-        self.formatter = ChatFormat(tokenizer)
+
 
     @torch.inference_mode()
     def generate(
@@ -166,7 +167,7 @@ class Llama:
         eos_reached = torch.tensor([False] * bsz, device="cuda")
         input_text_mask = tokens != pad_id
         if min_prompt_len == total_len:
-            logits = self.model.forward(tokens, prev_pos)
+            logits, _ = self.model.forward(tokens, prev_pos)
             token_logprobs = -F.cross_entropy(
                 input=logits.transpose(1, 2),
                 target=tokens,
@@ -177,7 +178,7 @@ class Llama:
         stop_tokens = torch.tensor(list(self.tokenizer.stop_tokens))
 
         for cur_pos in range(min_prompt_len, total_len):
-            logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+            logits, _ = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
             if temperature > 0:
                 probs = torch.softmax(logits[:, -1] / temperature, dim=-1)
                 next_token = sample_top_p(probs, top_p)
@@ -225,6 +226,60 @@ class Llama:
             out_tokens.append(toks)
             out_logprobs.append(probs)
         return (out_tokens, out_logprobs if logprobs else None)
+
+    @torch.inference_mode()
+    def generate_embedding(
+        self,
+        prompt_tokens: List[List[int]],
+        pooling_type: str = "mean" 
+    ) -> torch.Tensor:
+        """
+        Generate embeddings based on provided prompts using the language generation model.
+
+        Args:
+            prompt_tokens (List[List[int]]): List of tokenized prompts, where each prompt is represented as a list of integers.
+            pooling_type (str, optional): Pooling type to apply to the embeddings. Options are "mean", "max", and "min".
+
+        Returns:
+            torch.Tensor: A tensor representing the pooled embeddings for each prompt.
+
+        Note:
+            This method uses the provided prompts to generate embeddings without generating text.
+        """
+        params = self.model.params
+        bsz = len(prompt_tokens)
+        assert bsz <= params.max_batch_size, (bsz, params.max_batch_size)
+
+        max_prompt_len = max(len(t) for t in prompt_tokens)
+        assert max_prompt_len <= params.max_seq_len
+
+        pad_id = self.tokenizer.pad_id
+        tokens = torch.full((bsz, max_prompt_len), pad_id, dtype=torch.long, device="cuda")
+        for k, t in enumerate(prompt_tokens):
+            tokens[k, : len(t)] = torch.tensor(t, dtype=torch.long, device="cuda")
+
+        embeddings = []
+
+        def hook(module, input, output):
+            embeddings.append(output.detach().cpu())
+
+        hook_handle = self.model.norm.register_forward_hook(hook)
+        self.model.forward(tokens, 0)
+        hook_handle.remove()
+
+        embeddings = torch.cat(embeddings, dim=0)  # (bsz, seq_len, dim)
+
+        # Apply the pooling type across the batch
+        if pooling_type == "mean":
+            pooled_embeddings = embeddings.mean(dim=1)
+        elif pooling_type == "max":
+            pooled_embeddings = embeddings.max(dim=1)
+        elif pooling_type == "min":
+            pooled_embeddings = embeddings.min(dim=1)
+        else:
+            raise ValueError(f"Unsupported pooling type: {pooling_type}")
+
+        return pooled_embeddings
 
     def text_completion(
         self,
@@ -276,6 +331,9 @@ class Llama:
                 for t, logprobs_i in zip(generation_tokens, generation_logprobs)
             ]
         return [{"generation": self.tokenizer.decode(t)} for t in generation_tokens]
+
+
+
 
     def chat_completion(
         self,
@@ -338,7 +396,6 @@ class Llama:
             }
             for t in generation_tokens
         ]
-
 
 def sample_top_p(probs, p):
     """
