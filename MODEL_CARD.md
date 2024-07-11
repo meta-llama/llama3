@@ -397,7 +397,7 @@ In this section, we report the results for Llama 3 models on standard automatic 
    </td>
    <td>25.7
    </td>
-   <td>77.4
+   <td>41.2
    </td>
    <td>93.0
    </td>
