@@ -8,7 +8,6 @@
 
 ---
 
-
 # Meta Llama 3
 
 We are unlocking the power of large language models. Our latest version of Llama is now accessible to individuals, creators, researchers, and businesses of all sizes so that they can experiment, innovate, and scale their ideas responsibly.
@@ -97,6 +96,35 @@ Different models require different model-parallel (MP) values:
 | 70B    | 8  |
 
 All models support sequence length up to 8192 tokens, but we pre-allocate the cache according to `max_seq_len` and `max_batch_size` values. So set those according to your hardware.
+
+
+# Support for M1/M2 Apple Silicon
+Llama 2 fork for running inference on Mac M1/M2 (MPS) devices
+This is a fork of https://github.com/facebookresearch/llama that runs on Apple M2 (MPS - Metal Performance Shaders).
+
+Note: user needs to set PYTORCH_ENABLE_MPS_FALLBACK=1 env variable to run this code.
+This is a workaround for unsupported 'aten:polar.out' operator.
+
+So the `example_text_completion.py` will look like this 
+
+```
+PYTORCH_ENABLE_MPS_FALLBACK=1 torchrun --nproc_per_node 1 example_text_completion.py \
+    --ckpt_dir Meta-Llama-3-8B/ \
+    --tokenizer_path Meta-Llama-3-8B/tokenizer.model \
+    --max_seq_len 128 --max_batch_size 4
+```
+This will now use gloo backend instead of nccl in the case that you don't have nccl backend. 
+
+You can also check this 
+```
+if torch.backends.mps.is_available():
+    device = torch.device('mps')
+elif torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
+
+```
 
 ### Pretrained Models
 
