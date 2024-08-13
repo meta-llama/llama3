@@ -5,6 +5,7 @@ from setuptools import find_packages, setup
 
 
 def get_requirements(path: str):
+    """Requirement file parser"""
     return [l.strip() for l in open(path)]
 
 
