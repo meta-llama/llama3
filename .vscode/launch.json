@@ -2,17 +2,17 @@
     "configurations": [
         {
             "name": "Docker: Python - General",
-            "type": "docker",
-            "request": "launch",
-            "preLaunchTask": "docker-run: debug",
+            "type": "docker",  // Specifies that this configuration is for Docker
+            "request": "launch", // Indicates that this is a launch request
+            "preLaunchTask": "docker-run: debug", // Task to run before launching the debugger
             "python": {
-                "pathMappings": [
+                "pathMappings": [ // Maps local files to remote Docker container files
                     {
-                        "localRoot": "${workspaceFolder}",
-                        "remoteRoot": "/app"
+                        "localRoot": "${workspaceFolder}", // Local project folder
+                        "remoteRoot": "/app" // Path in the Docker container
                     }
                 ],
-                "projectType": "general"
+                "projectType": "general" // General project type
             }
         }
     ]

@@ -1,5 +1,5 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
+# Copyright (c) Your Game Studio.
+# This software may be used and distributed in accordance with the terms of your game’s license agreement.
 
 import os
 from logging import getLogger
@@ -20,24 +20,19 @@ from typing import (
 import tiktoken
 from tiktoken.load import load_tiktoken_bpe
 
-
 logger = getLogger(__name__)
 
-
-Role = Literal["system", "user", "assistant"]
-
+Role = Literal["system", "player", "npc"]  # Adjusted roles for your game
 
 class Message(TypedDict):
     role: Role
     content: str
 
-
 Dialog = Sequence[Message]
 
-
-class Tokenizer:
+class GameTokenizer:
     """
-    Tokenizing and encoding/decoding text using the Tiktoken tokenizer.
+    Tokenizing and encoding/decoding text using the Tiktoken tokenizer for your game.
     """
 
     special_tokens: Dict[str, int]
@@ -47,29 +42,23 @@ class Tokenizer:
     pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"  # noqa: E501
 
     def __init__(self, model_path: str):
-        """
-        Initializes the Tokenizer with a Tiktoken model.
-
-        Args:
-            model_path (str): The path to the Tiktoken model file.
-        """
         assert os.path.isfile(model_path), model_path
 
         mergeable_ranks = load_tiktoken_bpe(model_path)
         num_base_tokens = len(mergeable_ranks)
         special_tokens = [
-            "<|begin_of_text|>",
-            "<|end_of_text|>",
-            "<|reserved_special_token_0|>",
-            "<|reserved_special_token_1|>",
-            "<|reserved_special_token_2|>",
-            "<|reserved_special_token_3|>",
+            "<|begin_game_text|>",
+            "<|end_game_text|>",
+            "<|reserved_token_0|>",
+            "<|reserved_token_1|>",
+            "<|reserved_token_2|>",
+            "<|reserved_token_3|>",
             "<|start_header_id|>",
             "<|end_header_id|>",
-            "<|reserved_special_token_4|>",
-            "<|eot_id|>",  # end of turn
+            "<|reserved_token_4|>",
+            "<|eot_id|>",
         ] + [
-            f"<|reserved_special_token_{i}|>"
+            f"<|reserved_token_{i}|>"
             for i in range(5, self.num_reserved_special_tokens - 5)
         ]
         self.special_tokens = {
@@ -84,12 +73,11 @@ class Tokenizer:
         logger.info(f"Reloaded tiktoken model from {model_path}")
 
         self.n_words: int = self.model.n_vocab
-        # BOS / EOS token IDs
-        self.bos_id: int = self.special_tokens["<|begin_of_text|>"]
-        self.eos_id: int = self.special_tokens["<|end_of_text|>"]
+        self.bos_id: int = self.special_tokens["<|begin_game_text|>"]
+        self.eos_id: int = self.special_tokens["<|end_game_text|>"]
         self.pad_id: int = -1
         self.stop_tokens = {
-            self.special_tokens["<|end_of_text|>"],
+            self.special_tokens["<|end_game_text|>"],
             self.special_tokens["<|eot_id|>"],
         }
         logger.info(
@@ -105,36 +93,9 @@ class Tokenizer:
         allowed_special: Union[Literal["all"], AbstractSet[str]] = set(),
         disallowed_special: Union[Literal["all"], Collection[str]] = (),
     ) -> List[int]:
-        """
-        Encodes a string into a list of token IDs.
+        assert isinstance(s, str)
 
-        Args:
-            s (str): The input string to be encoded.
-            bos (bool): Whether to prepend the beginning-of-sequence token.
-            eos (bool): Whether to append the end-of-sequence token.
-            allowed_tokens ("all"|set[str]): allowed special tokens in string
-            disallowed_tokens ("all"|set[str]): special tokens that raise an error when in string
-
-        Returns:
-            list[int]: A list of token IDs.
-
-        By default, setting disallowed_special=() encodes a string by ignoring
-        special tokens. Specifically:
-        - Setting `disallowed_special` to () will cause all text corresponding
-          to special tokens to be encoded as natural text (insteading of raising
-          an error).
-        - Setting `allowed_special` to "all" will treat all text corresponding
-          to special tokens to be encoded as special tokens.
-        """
-        assert type(s) is str
-
-        # The tiktoken tokenizer can handle <=400k chars without
-        # pyo3_runtime.PanicException.
         TIKTOKEN_MAX_ENCODE_CHARS = 400_000
-
-        # https://github.com/openai/tiktoken/issues/195
-        # Here we iterate over subsequences and split if we exceed the limit
-        # of max consecutive non-whitespace or whitespace characters.
         MAX_NO_WHITESPACES_CHARS = 25_000
 
         substrs = (
@@ -160,26 +121,12 @@ class Tokenizer:
         return t
 
     def decode(self, t: Sequence[int]) -> str:
-        """
-        Decodes a list of token IDs into a string.
-
-        Args:
-            t (List[int]): The list of token IDs to be decoded.
-
-        Returns:
-            str: The decoded string.
-        """
-        # Typecast is safe here. Tiktoken doesn't do anything list-related with the sequence.
         return self.model.decode(cast(List[int], t))
 
     @staticmethod
     def _split_whitespaces_or_nonwhitespaces(
         s: str, max_consecutive_slice_len: int
     ) -> Iterator[str]:
-        """
-        Splits the string `s` so that each substring contains no more than `max_consecutive_slice_len`
-        consecutive whitespaces or consecutive non-whitespaces.
-        """
         current_slice_len = 0
         current_slice_is_space = s[0].isspace() if len(s) > 0 else False
         slice_start = 0
@@ -198,9 +145,8 @@ class Tokenizer:
                     current_slice_len = 1
         yield s[slice_start:]
 
-
-class ChatFormat:
-    def __init__(self, tokenizer: Tokenizer):
+class GameChatFormat:
+    def __init__(self, tokenizer: GameTokenizer):
         self.tokenizer = tokenizer
 
     def encode_header(self, message: Message) -> List[int]:
@@ -221,9 +167,9 @@ class ChatFormat:
 
     def encode_dialog_prompt(self, dialog: Dialog) -> List[int]:
         tokens = []
-        tokens.append(self.tokenizer.special_tokens["<|begin_of_text|>"])
+        tokens.append(self.tokenizer.special_tokens["<|begin_game_text|>"])
         for message in dialog:
             tokens.extend(self.encode_message(message))
-        # Add the start of an assistant message for the model to complete.
-        tokens.extend(self.encode_header({"role": "assistant", "content": ""}))
+        tokens.extend(self.encode_header({"role": "npc", "content": ""}))  # NPC role
         return tokens
+

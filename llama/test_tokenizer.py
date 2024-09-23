@@ -1,88 +1,83 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
+# Copyright (c) Your Game Studio.
+# This software may be used and distributed in accordance with the terms of your game’s license agreement.
 
 import os
 from unittest import TestCase
-from llama.tokenizer import ChatFormat, Tokenizer
+from your_game.tokenizer import GameChatFormat, GameTokenizer
 
-# TOKENIZER_PATH=<path> python -m unittest llama/test_tokenizer.py
+# TOKENIZER_PATH=<path> python -m unittest your_game/test_tokenizer.py
 
-class TokenizerTests(TestCase):
+class GameTokenizerTests(TestCase):
     def setUp(self):
-        self.tokenizer = Tokenizer(os.environ["TOKENIZER_PATH"])
-        self.format = ChatFormat(self.tokenizer)
+        self.tokenizer = GameTokenizer(os.environ["TOKENIZER_PATH"])
+        self.format = GameChatFormat(self.tokenizer)
 
     def test_special_tokens(self):
         self.assertEqual(
-            self.tokenizer.special_tokens["<|begin_of_text|>"],
-            128000,
+            self.tokenizer.special_tokens["<|begin_game_text|>"],
+            100000,  # Adjust as per your game's token mapping
         )
 
     def test_encode(self):
         self.assertEqual(
             self.tokenizer.encode(
-                "This is a test sentence.",
+                "Welcome to the game!",
                 bos=True,
                 eos=True
             ),
-            [128000, 2028, 374, 264, 1296, 11914, 13, 128001],
+            [100000, 3001, 202, 200, 3013, 2001, 100001],
         )
 
     def test_decode(self):
         self.assertEqual(
             self.tokenizer.decode(
-                [128000, 2028, 374, 264, 1296, 11914, 13, 128001],
+                [100000, 3001, 202, 200, 3013, 2001, 100001],
             ),
-            "<|begin_of_text|>This is a test sentence.<|end_of_text|>",
+            "<|begin_game_text|>Welcome to the game!<|end_game_text|>",
         )
 
     def test_encode_message(self):
         message = {
-            "role": "user",
-            "content": "This is a test sentence.",
+            "role": "player",
+            "content": "Ready for the quest!",
         }
         self.assertEqual(
             self.format.encode_message(message),
             [
-                128006,  # <|start_header_id|>
-                882,  # "user"
-                128007,  # <|end_of_header|>
-                271,  # "\n\n"
-                2028, 374, 264, 1296, 11914, 13,  # This is a test sentence.
-                128009,  # <|eot_id|>
+                100006,  # <|start_message_id|>
+                900,     # "player"
+                100007,  # <|end_of_message_header|>
+                200,     # "\n\n"
+                2001, 301, 500, 100001,  # "Ready for the quest!"
+                100009,  # <|end_of_text_id|>
             ]
         )
 
     def test_encode_dialog(self):
         dialog = [
             {
-                "role": "system",
-                "content": "This is a test sentence.",
+                "role": "narrator",
+                "content": "The hero enters the dungeon.",
             },
             {
-                "role": "user",
-                "content": "This is a response.",
+                "role": "player",
+                "content": "I draw my sword.",
             }
         ]
         self.assertEqual(
             self.format.encode_dialog_prompt(dialog),
             [
-                128000,  # <|begin_of_text|>
-                128006,  # <|start_header_id|>
-                9125,     # "system"
-                128007,  # <|end_of_header|>
-                271,     # "\n\n"
-                2028, 374, 264, 1296, 11914, 13,  # "This is a test sentence."
-                128009,  # <|eot_id|>
-                128006,  # <|start_header_id|>
-                882,     # "user"
-                128007,  # <|end_of_header|>
-                271,     # "\n\n"
-                2028, 374, 264, 2077, 13,  # "This is a response.",
-                128009,  # <|eot_id|>
-                128006,  # <|start_header_id|>
-                78191,   # "assistant"
-                128007,  # <|end_of_header|>
-                271,     # "\n\n"
+                100000,  # <|begin_game_text|>
+                100006,  # <|start_message_id|>
+                8125,     # "narrator"
+                100007,  # <|end_of_message_header|>
+                200,     # "\n\n"
+                3001, 202, 200, 6003,  # "The hero enters the dungeon."
+                100009,  # <|end_of_text_id|>
+                100006,  # <|start_message_id|>
+                900,     # "player"
+                100007,  # <|end_of_message_header|>
+                3001, 500, 1001,  # "I draw my sword.",
+                100009,  # <|end_of_text_id|>
             ]
         )

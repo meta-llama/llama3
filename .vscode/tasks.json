@@ -1,7 +1,6 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		,
 		{
 			"type": "docker-build",
 			"label": "docker-build",
@@ -19,8 +18,11 @@
 			"dependsOn": [
 				"docker-build"
 			],
-			"python": {
-				"file": "example_text_completion.py"
+			"dockerRun": {
+				"image": "llama3:latest",
+				"options": {
+					"command": "python example_text_completion.py"
+				}
 			}
 		}
 	]

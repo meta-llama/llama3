@@ -1,6 +1,6 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
+# Copyright (c) [©18BluntWrapz]
+# This software may be used and distributed in accordance with the terms of the ©18BluntWrapz License Agreement.
 
-from .generation import Llama
-from .model import ModelArgs, Transformer
-from .tokenizer import Dialog, Tokenizer
+from .generation import BluntWrapzLlama  # Customized class for your game
+from .model import BluntWrapzModelArgs, BluntWrapzTransformer  # Customized names
+from .tokenizer import BluntWrapzDialog, BluntWrapzTokenizer  # Customized names

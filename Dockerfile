@@ -1,23 +1,34 @@
+# ©18BluntWrapz Project Dockerfile
 # For more information, please refer to https://aka.ms/vscode-docker-python
+
+# Base image for Python 3 slim version
 FROM python:3-slim
 
-# Keeps Python from generating .pyc files in the container
+# Prevent Python from writing .pyc files and enabling unbuffered output for container logging
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
-# Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
-
+# Set the working directory to /app
 WORKDIR /app
+
+# Copy the requirements file first to take advantage of Docker caching
+COPY requirements.txt ./
+
+# Install dependencies
+RUN python -m pip install --upgrade pip && \
+    python -m pip install -r requirements.txt
+
+# Copy all project files to the /app directory in the container
 COPY . /app
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+# Creates a non-root user with a specific UID for better security and permissions on /app
+RUN adduser -u 9999 --disabled-password --gecos "" appuser && chown -R appuser /app
+
+# Switch to the non-root user
 USER appuser
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "example_text_completion.py"]
+# Set the default command to run your Python script for the ©18BluntWrapz project
+CMD ["python", "run_game.py"]
+
+# Debug configuration can override the entrypoint for more flexibility during development
+# For more information, please refer to https://aka.ms/vscode-docker-python-debug

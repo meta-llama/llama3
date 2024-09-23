@@ -1,8 +1,15 @@
-{
-    "name": "18 Bus Route Adventure",
-    "description": "An adventure game exploring the 18 bus route from Langley to Manchester.",
+import json
+
+with open("game_data.json", "r") as f:
+    game_data = json.load(f)
+
+# Accessing data (example)
+game_title = game_data["settings"]["title"]
+print(f"Welcome to {game_title}!")
+
+    {"description": "An adventure game exploring the 18 bus route from Langley to Manchester.",
     "settings": {
-        "title": "The Bus Game",
+        "title": "©1BluntWrapz",
         "startLocation": "Langley",
         "endLocation": "Manchester",
         "busRoute": "18",

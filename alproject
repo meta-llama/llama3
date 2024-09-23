@@ -1,92 +1,112 @@
-// Welcome to your new AL extension.
-// Remember that object names and IDs should be unique across all extensions.
-// AL snippets start with t*, like tpageext - give them a try and happy coding!
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
-namespace DefaultPublisher.ALProject1;
+# C extensions
+*.so
 
-using Microsoft.Dynamics.Nav.Types;
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-pageextension 50100 CustomerListExt extends "Customer List"
-{
-    trigger OnOpenPage();
-    begin
-        // This message is not necessary and can be removed for optimization
-    end;
-}
-table 50100 AdventureGame
-{
-    fields
-    {
-        field(1; Name; Text[50])
-        {
-            Caption = 'Name';
-            DataClassification = CustomerContent;
-        }
-        field(2; Description; Text[250])
-        {
-            Caption = 'Description';
-            DataClassification = CustomerContent;
-        }
-        field(3; Location; Text[50])
-        {
-            Caption = 'Location';
-            DataClassification = CustomerContent;
-        }
-    }
+# PyInstaller
+*.manifest
+*.spec
 
-    keys
-    {
-        key(PK; Name)
-        {
-            Clustered = true;
-        }
-    }
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
-    // Add data classification property to the table
-    DataClassification = CustomerContent;
-}
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
-pageextension 50100 AdventureGameListExt extends "Adventure Game List"
-{
-    layout
-    {
-        area(Content)
-        {
-            group(General)
-            {
-                field(Name; AdventureGame.Name)
-                {
-                    ApplicationArea = All;
-                }
-                field(Description; AdventureGame.Description)
-                {
-                    ApplicationArea = All;
-                }
-                field(Location; AdventureGame.Location)
-                {
-                    ApplicationArea = All;
-                }
-            }
-        }
-    }
-}
+# Translations
+*.mo
+*.pot
 
-codeunit 50100 AdventureGameManagement
-{
-    procedure CreateAdventureGame(Name: Text[50]; Description: Text[250]; Location: Text[50])
-    var
-        AdventureGameRec: Record AdventureGame;
-    begin
-        AdventureGameRec.Init();
-        AdventureGameRec.Name := Name;
-        AdventureGameRec.Description := Description;
-        AdventureGameRec.Location := Location;
-        AdventureGameRec.Insert(true);
-    end;
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 
-    procedure UpdateAdventureGame(Name: Text[50]; Description: Text[250]; Location: Text[50])
-    var
-        AdventureGameRec: Record AdventureGame;
-    begin
-        if AdventureGameRec.Get(Name) then begin
-            AdventureGameRec.Description := Description;
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Python environment files
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Project settings
+.spyderproject
+.spyproject
+.ropeproject
+
+# Documentation
+/site
+.mkdocs.yml
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Debug symbols
+cython_debug/
+
+# Ignore IDE files
+.idea/

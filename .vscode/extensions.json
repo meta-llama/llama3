@@ -4,10 +4,18 @@
 
 	// List of extensions which should be recommended for users of this workspace.
 	"recommendations": [
-		
+		"ms-python.python", // Python extension for syntax highlighting and linting
+		"ms-toolsai.jupyter", // Jupyter notebooks support
+		"esbenp.prettier-vscode", // Code formatter for consistent styling
+		"vscode-icons-team.vscode-icons", // Icons for better visual organization
+		"vscode-debugger.debug", // Debugging tools for Python
+		"shd101wyy.markdown-preview-enhanced", // Enhanced Markdown support for documentation
+		"ms-vscode.pylance", // Fast, feature-rich language support for Python
+		"eamodio.gitlens", // Git supercharged for better version control
+		"ms-azuretools.vscode-azurefunctions" // Azure Functions support if you plan to use cloud features
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": [
-		
+		"editorconfig.editorconfig" // If you prefer not to use EditorConfig
 	]
 }
