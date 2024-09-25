@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/opt/conda/bin/python"  // Specifies the path to the Python interpreter
+    "python.pythonPath": "/opt/conda/bin/python",
+    "cmake.useCMakePresets": "always" // Specifies the path to the Python interpreter
 }
