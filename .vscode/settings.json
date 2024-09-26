@@ -1,4 +1,29 @@
 {
-    "python.pythonPath": "/opt/conda/bin/python",
-    "cmake.useCMakePresets": "always" // Specifies the path to the Python interpreter
-}
+    "Application": "18BluntWrapz",
+    "Application_ID": "b361d42af7e9c5f8ef193927495510bfce6990a45bb03d54029d3f37c7e20ce4",
+    "Secret": "gloas-8356ec3ff3f957c85e3485345c45a29f83ec22bbc82a3b4df3313a4b9178b11a",
+    "Callback_URL": "https://www.bluntwrapz.com",
+    "Confidential": "Yes",
+    "Scopes": [
+      "api",
+      "read_api",
+      "read_user",
+      "create_runner",
+      "manage_runner",
+      "k8s_proxy",
+      "read_repository",
+      "write_repository",
+      "read_registry",
+      "write_registry",
+      "read_observability",
+      "write_observability",
+      "ai_features",
+      "sudo",
+      "admin_mode",
+      "read_service_ping",
+      "openid",
+      "profile",
+      "email"
+    ]
+  }
+  
