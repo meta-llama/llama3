@@ -1,0 +1,29 @@
+# Ignore build artifacts
+/Build/
+/bin/
+/obj/
+
+# Ignore Unity/Unreal specific directories (if applicable)
+/Library/
+/Temp/
+/Logs/
+/MemoryCaptures/
+
+# Ignore user-specific settings
+.vscode/
+/.idea/
+*.suo
+*.user
+*.userprefs
+
+# Ignore generated assets
+*.bak
+*.log
+*.tmp
+
+# Ignore config files
+*.config
+*.prefs
+
+# Ignore custom debug files
+debug_logs/
