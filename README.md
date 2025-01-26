@@ -15,7 +15,7 @@ Thank you for developing with Llama models. As part of the Llama 3.1 release, we
 - [PurpleLlama](https://github.com/meta-llama/PurpleLlama) - Key component of Llama Stack focusing on safety risks and inference time mitigations 
 - [llama-toolchain](https://github.com/meta-llama/llama-toolchain) - Model development (inference/fine-tuning/safety shields/synthetic data generation) interfaces and canonical implementations
 - [llama-agentic-system](https://github.com/meta-llama/llama-agentic-system) - E2E standalone Llama Stack system, along with opinionated underlying interface, that enables creation of agentic applications
-- [llama-recipes](https://github.com/meta-llama/llama-recipes) - Community driven scripts and integrations
+- [llama-cookbook](https://github.com/meta-llama/llama-recipes) - Community driven scripts and integrations
 
 If you have any questions, please feel free to file an issue on any of the above repos and we will do our best to respond in a timely manner. 
 
@@ -28,7 +28,7 @@ We are unlocking the power of large language models. Our latest version of Llama
 
 This release includes model weights and starting code for pre-trained and instruction-tuned Llama 3 language models — including sizes of 8B to 70B parameters.
 
-This repository is a minimal example of loading Llama 3 models and running inference. For more detailed examples, see [llama-recipes](https://github.com/facebookresearch/llama-recipes/).
+This repository is a minimal example of loading Llama 3 models and running inference. For more detailed examples, see [llama-cookbook](https://github.com/facebookresearch/llama-recipes/).
 
 ## Download
 
@@ -70,7 +70,7 @@ huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct --include "original
 
 ## Quick Start
 
-You can follow the steps below to get up and running with Llama 3 models quickly. These steps will let you run quick inference locally. For more examples, see the [Llama recipes repository](https://github.com/facebookresearch/llama-recipes).
+You can follow the steps below to get up and running with Llama 3 models quickly. These steps will let you run quick inference locally. For more examples, see the [Llama Cookbook repository](https://github.com/facebookresearch/llama-recipes).
 
 1. Clone and download this repository in a conda env with PyTorch / CUDA.
 
@@ -129,7 +129,7 @@ torchrun --nproc_per_node 1 example_text_completion.py \
 The fine-tuned models were trained for dialogue applications. To get the expected features and performance for them, specific formatting defined in [`ChatFormat`](https://github.com/meta-llama/llama3/blob/main/llama/tokenizer.py#L202)
 needs to be followed: The prompt begins with a `<|begin_of_text|>` special token, after which one or more messages follow. Each message starts with the `<|start_header_id|>` tag, the role `system`, `user` or `assistant`, and the `<|end_header_id|>` tag. After a double newline `\n\n`, the message's contents follow. The end of each message is marked by the `<|eot_id|>` token.
 
-You can also deploy additional classifiers to filter out inputs and outputs that are deemed unsafe. See the llama-recipes repo for [an example](https://github.com/meta-llama/llama-recipes/blob/main/recipes/inference/local_inference/inference.py) of how to add a safety checker to the inputs and outputs of your inference code.
+You can also deploy additional classifiers to filter out inputs and outputs that are deemed unsafe. See the llama-cookbook repo for [an example](https://github.com/meta-llama/llama-recipes/blob/main/recipes/inference/local_inference/inference.py) of how to add a safety checker to the inputs and outputs of your inference code.
 
 Examples using llama-3-8b-chat:
 
