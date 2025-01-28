@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "oracle.oracle-java",
+        "kodezi.kodezi",
+        "formulahendry.code-runner",
+        "amazonwebservices.amazon-q-vscode",
+        "visualstudioexptteam.vscodeintellicode"
+    ]
+}
