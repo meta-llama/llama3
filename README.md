@@ -162,3 +162,77 @@ See the [LICENSE](LICENSE) file, as well as our accompanying [Acceptable Use Pol
 ## Questions
 
 For common questions, the FAQ can be found [here](https://llama.meta.com/faq), which will be updated over time as new questions arise.
+
+## Contributing Guidelines
+
+We welcome contributions to the LLaMA models! If you're interested in modifying, extending, or improving the models, please follow these guidelines:
+
+### Getting Started
+
+1. **Familiarize yourself with the codebase**:  
+   Read through the README, explore the repository, and understand the model architecture and training procedures.
+
+2. **Set up your environment**:  
+   Install the required dependencies, including PyTorch, Transformers, and any other specified libraries.
+
+3. **Choose a contribution area**:  
+   Identify an area you'd like to contribute to, such as:
+   - Model architecture improvements
+   - Training data enhancements
+   - New task or application development
+   - Bug fixes or performance optimizations
+
+   **Note**: The Meta Llama 3 repository is deprecated. Please use the consolidated GitHub repos (`llama-models`, `PurpleLlama`, `llama-toolchain`, `llama-agentic-system`, and `llama-recipes`) for contributions.
+
+### Contribution Process
+
+1. **Create an issue**:  
+   Open a new issue on the GitHub repository to discuss your proposed contribution. This will help us understand your intentions and provide feedback.
+
+2. **Fork the repository**:  
+   Create a fork of the LLaMA repository to make changes.
+
+3. **Make changes**:  
+   Implement your changes, following the existing code style and structure.
+
+4. **Test and validate**:  
+   Thoroughly test and validate your changes to ensure they don't introduce errors or regressions.
+
+5. **Submit a pull request**:  
+   Create a pull request to merge your changes into the main repository.
+
+6. **Review and feedback**:  
+   Our team will review your contribution, provide feedback, and may request modifications.
+
+### Code Style and Structure
+
+- **Follow PyTorch and Transformers conventions**:  
+  Adhere to the coding style and structure used in PyTorch and Transformers.
+
+- **Use clear and descriptive naming**:  
+  Choose variable, function, and module names that clearly indicate their purpose.
+
+- **Write comprehensive docstrings**:  
+  Document your code with detailed explanations of functions, classes, and modules.
+
+### Testing and Validation
+
+- **Write unit tests**:  
+  Create unit tests to verify the correctness of your changes.
+
+- **Run integration tests**:  
+  Ensure your changes don't break existing functionality by running integration tests.
+
+- **Validate performance**:  
+  Verify that your changes don't negatively impact model performance.
+
+### Additional Resources
+
+- **LLaMA documentation**:  
+  Refer to the LLaMA documentation for more information on the models and training procedures.
+
+- **PyTorch and Transformers documentation**:  
+  Consult the PyTorch and Transformers documentation for guidance on using these libraries.
+
+- **Responsible Use Guide**:  
+  Familiarize yourself with the Responsible Use Guide to ensure your contributions align with our ethical guidelines.
