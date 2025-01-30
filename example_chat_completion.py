@@ -18,7 +18,7 @@ def main(
     max_gen_len: Optional[int] = None,
 ):
     """
-    Examples to run with the models finetuned for chat. Prompts correspond of chat
+    Examples to run with the models finetuned for chat. Prompts correspond to chat
     turns between the user and assistant with the final one always being the user.
 
     An optional system prompt at the beginning to control how the model should respond
@@ -82,3 +82,4 @@ These are just a few of the many attractions that Paris has to offer. With so mu
 
 if __name__ == "__main__":
     fire.Fire(main)
+}
