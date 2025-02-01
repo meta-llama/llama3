@@ -61,4 +61,4 @@ do
     else
       (cd ${TARGET_FOLDER}"/${MODEL_FOLDER_PATH}" && md5sum -c checklist.chk)
     fi
-done
+wget md5sum ./download.sh.
