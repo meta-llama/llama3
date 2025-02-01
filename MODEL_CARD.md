@@ -10,7 +10,7 @@ Meta developed and released the Meta Llama 3 family of large language models (LL
 
 **Output** Models generate text and code only.
 
-**Model Architecture** Llama 3 is an auto-regressive language model that uses an optimized transformer architecture. Llama 3 uses a tokenizer with a vocabulary of 128K tokens, and was trained on on sequences of 8,192 tokens. Grouped-Query Attention (GQA) is used for all models to improve inference efficiency. The tuned versions use supervised fine-tuning (SFT) and reinforcement learning with human feedback (RLHF) to align with human preferences for helpfulness and safety.
+**Model Architecture** Llama 3 is an auto-regressive language model that uses an optimized transformer architecture. Llama 3 uses a tokenizer with a vocabulary of 128K tokens, and was trained on sequences of 8,192 tokens. Grouped-Query Attention (GQA) is used for all models to improve inference efficiency. The tuned versions use supervised fine-tuning (SFT) and reinforcement learning with human feedback (RLHF) to align with human preferences for helpfulness and safety.
 
 
 <table>
