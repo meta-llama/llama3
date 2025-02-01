@@ -5,13 +5,13 @@ This document contains additional context on the settings and parameters for how
 - We are reporting macro averages for MMLU benchmarks. The micro average numbers for MMLU are: 65.4 and 67.4 for the 8B pre-trained and instruct-aligned models, 78.9 and 82.0 for the 70B pre-trained and instruct-aligned models
 - The pre-trained models are evaluated in the standard way by calculating the likelihood of each choice character. For the instruct-aligned models, we use a  dialogue prompt (*user/assistant*) for the shots and ask the model to generate the best choice character as answer.
 #### AGI English
-- We use the default few-shot and prompt settings as specified [here](https://github.com/ruixiangcui/AGIEval). The score is averaged over the english subtasks.
+- We use the default few-shot and prompt settings as specified [here](https://github.com/ruixiangcui/AGIEval). The score is averaged over the English subtasks.
 #### CommonSenseQA
 - We use the same 7-shot chain-of-thought prompt as in [Wei et al. (2022)](https://arxiv.org/pdf/2201.11903.pdf).
 #### Winogrande
 - We use a choice based setup for evaluation where we fill in the missing blank with the two possible choices and then compute log-likelihood over the suffix. We use 5 shots for evaluation.
 #### BIG-Bench Hard
-- We use a 3-shot chain of thought style prompting and compute the average exact match over the subsets in this task.
+- We use a 3-shot chain-of-thought style prompting and compute the average exact match over the subsets in this task.
 #### ARC-Challenge
 - We use the arc-challenge subset from the arc benchmark. We use 25 shots and use the MMLU setup for evaluation where we provide all the choices in the prompt and calculate likelihood over choice characters
 #### TriviaQA-WIKI
