@@ -4,3 +4,13 @@
 from .generation import Llama
 from .model import ModelArgs, Transformer
 from .tokenizer import Dialog, Tokenizer
+
+__version__ = "0.0.1"
+
+__all__ = [
+    "Llama", 
+    "ModelArgs", 
+    "Transformer", 
+    "Dialog", 
+    "Tokenizer"
+]
