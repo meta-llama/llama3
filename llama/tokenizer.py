@@ -180,14 +180,17 @@ class Tokenizer:
         Splits the string `s` so that each substring contains no more than `max_consecutive_slice_len`
         consecutive whitespaces or consecutive non-whitespaces.
         """
-        current_slice_len = 0
-        current_slice_is_space = s[0].isspace() if len(s) > 0 else False
+        if not s:
+            return
+
         slice_start = 0
+        current_slice_len = 0
+        current_slice_is_space = s[0].isspace()
 
-        for i in range(len(s)):
-            is_now_space = s[i].isspace()
+        for i, char in enumerate(s):
+            is_now_space = char.isspace()
 
-            if current_slice_is_space ^ is_now_space:
+            if current_slice_is_space != is_now_space:
                 current_slice_len = 1
                 current_slice_is_space = is_now_space
             else:
